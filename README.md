@@ -14,7 +14,6 @@
 ##
 ##
 ##
-##
 
 > [!NOTE]
 > From now on, this will be the main script. It contains both [SAMURAI's Scenarios](https://github.com/YimMenu-Lua/SAMURAI-Scenarios) and [SAMURAI's Animations](https://github.com/YimMenu-Lua/SAMURAI-Animations) so the standalone scripts will not be updated any further. All new updates will be in this repo.
