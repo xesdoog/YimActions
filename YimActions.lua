@@ -124,11 +124,7 @@ end
                     type2:sleep(info.ptfxdelay)
                     GRAPHICS.USE_PARTICLE_FX_ASSET(info.ptfxdict)
                     loopedFX = GRAPHICS.START_NETWORKED_PARTICLE_FX_LOOPED_ON_ENTITY_BONE(info.ptfxname, ped, info.ptfxOffx, info.ptfxOffy, info.ptfxOffz, 0.0, 0.0, 0.0, boneIndex, info.ptfxscale, false, false, false, 0, 0, 0, 0)
-                    while STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
-                        STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-                        coroutine.yield()
-                        is_playing_anim = true
-                    end
+                    is_playing_anim = true
                 end)
 
             elseif info.type == 3 then
@@ -172,6 +168,34 @@ end
                     STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
                     is_playing_anim = true
                 end)
+
+            elseif info.type == 5 then
+                cleanup()
+                script.run_in_fiber(function(type5)
+                    while not STREAMING.HAS_MODEL_LOADED(info.prop1) do
+                        STREAMING.REQUEST_MODEL(info.prop1)
+                        coroutine.yield()
+                    end
+                    prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0, true, true, false)
+                    ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, ped, boneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
+                    type5:sleep(50)
+                    STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
+                    while not STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
+                        STREAMING.REQUEST_NAMED_PTFX_ASSET(info.ptfxdict)
+                        coroutine.yield()
+                    end
+                    GRAPHICS.USE_PARTICLE_FX_ASSET(info.ptfxdict)
+                    loopedFX = GRAPHICS.START_NETWORKED_PARTICLE_FX_LOOPED_ON_ENTITY(info.ptfxname, prop1, info.ptfxOffx, info.ptfxOffy, info.ptfxOffz, 0.0, 0.0, 0.0, info.ptfxscale, false, false, false, 0, 0, 0, 0)
+                    type5:sleep(50)
+                    while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
+                        STREAMING.REQUEST_ANIM_DICT(info.dict)
+                        STREAMING.REQUEST_ANIM_SET(info.anim)
+                        coroutine.yield()
+                    end
+                    TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, info.flag, 0.0, false, false, false)
+                    is_playing_anim = true
+                end)
+
             else
                 cleanup()
                 script.run_in_fiber(function(script)
