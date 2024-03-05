@@ -269,55 +269,59 @@ ImGui.SameLine()
     end
 
     event.register_handler(menu_event.ScriptsReloaded, function()
-        GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
-        ENTITY.DELETE_ENTITY(prop1)
-        ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop1)
-        ENTITY.DELETE_ENTITY(prop2)
-        ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
-        TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
-        while STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
-            STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-            coroutine.yield()
-        end
-        while STREAMING.DOES_ANIM_DICT_EXIST(info.dict) and STREAMING.DOES_ANIM_SET_EXIST(info.anim) do
-            STREAMING.REMOVE_ANIM_DICT(info.dict)
-            STREAMING.REMOVE_ANIM_SET(info.anim)
-            coroutine.yield()
-        end
+        if is_playing_anim then
+            GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
+            ENTITY.DELETE_ENTITY(prop1)
+            ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop1)
+            ENTITY.DELETE_ENTITY(prop2)
+            ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
+            TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
+            while STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
+                STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
+                coroutine.yield()
+            end
+            while STREAMING.DOES_ANIM_DICT_EXIST(info.dict) and STREAMING.DOES_ANIM_SET_EXIST(info.anim) do
+                STREAMING.REMOVE_ANIM_DICT(info.dict)
+                STREAMING.REMOVE_ANIM_SET(info.anim)
+                coroutine.yield()
+            end
         -- //fix player clipping through the ground after ending low-positioned anims//
-        local current_coords = ENTITY.GET_ENTITY_COORDS(ped)
-        if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
-            PED.SET_PED_COORDS_KEEP_VEHICLE(ped, current_coords.x, current_coords.y, current_coords.z)
-        else
-            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(ped, current_coords.x, current_coords.y, current_coords.z, true, false, false)
+            local current_coords = ENTITY.GET_ENTITY_COORDS(ped)
+            if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
+                PED.SET_PED_COORDS_KEEP_VEHICLE(ped, current_coords.x, current_coords.y, current_coords.z)
+            else
+                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(ped, current_coords.x, current_coords.y, current_coords.z, true, false, false)
+            end
+            is_playing_anim = false
         end
-        is_playing_anim = false
     end)
 
     event.register_handler(menu_event.MenuUnloaded, function()
-        GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
-        ENTITY.DELETE_ENTITY(prop1)
-        ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop1)
-        ENTITY.DELETE_ENTITY(prop2)
-        ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
-        TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
-        while STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
-            STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-            coroutine.yield()
-        end
-        while STREAMING.DOES_ANIM_DICT_EXIST(info.dict) and STREAMING.DOES_ANIM_SET_EXIST(info.anim) do
-            STREAMING.REMOVE_ANIM_DICT(info.dict)
-            STREAMING.REMOVE_ANIM_SET(info.anim)
-            coroutine.yield()
-        end
+        if is_playing_anim then
+            GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
+            ENTITY.DELETE_ENTITY(prop1)
+            ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop1)
+            ENTITY.DELETE_ENTITY(prop2)
+            ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
+            TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
+            while STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
+                STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
+                coroutine.yield()
+            end
+            while STREAMING.DOES_ANIM_DICT_EXIST(info.dict) and STREAMING.DOES_ANIM_SET_EXIST(info.anim) do
+                STREAMING.REMOVE_ANIM_DICT(info.dict)
+                STREAMING.REMOVE_ANIM_SET(info.anim)
+                coroutine.yield()
+            end
         -- //fix player clipping through the ground after ending low-positioned anims//
-        local current_coords = ENTITY.GET_ENTITY_COORDS(ped)
-        if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
-            PED.SET_PED_COORDS_KEEP_VEHICLE(ped, current_coords.x, current_coords.y, current_coords.z)
-        else
-            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(ped, current_coords.x, current_coords.y, current_coords.z, true, false, false)
+            local current_coords = ENTITY.GET_ENTITY_COORDS(ped)
+            if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
+                PED.SET_PED_COORDS_KEEP_VEHICLE(ped, current_coords.x, current_coords.y, current_coords.z)
+            else
+                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(ped, current_coords.x, current_coords.y, current_coords.z, true, false, false)
+            end
+            is_playing_anim = false
         end
-        is_playing_anim = false
     end)
 end)
 
@@ -516,15 +520,19 @@ ImGui.SameLine()
     end
 
     event.register_handler(menu_event.ScriptsReloaded, function()
-        ENTITY.DELETE_ENTITY(bbq)
-        TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
-        is_playing_scenario = false
+        if is_playing_scenario then
+            ENTITY.DELETE_ENTITY(bbq)
+            TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
+            is_playing_scenario = false
+        end
     end)
 
     event.register_handler(menu_event.MenuUnloaded, function()
-        ENTITY.DELETE_ENTITY(bbq)
-        TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
-        is_playing_scenario = false
+        if is_playing_scenario then
+            ENTITY.DELETE_ENTITY(bbq)
+            TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
+            is_playing_scenario = false
+        end
     end)
 
 end)
