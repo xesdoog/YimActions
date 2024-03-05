@@ -161,8 +161,8 @@ end
                     end
                     TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, info.flag, 1.0, false, false, false)
                     prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0, true, true, false)
-                    type4:sleep(200)
-                    ENTITY.SET_ENTITY_COORDS_NO_OFFSET(prop1, bonecoords.x + info.posx, bonecoords.y + info.posy, bonecoords.z + info.posz)
+                    ENTITY.SET_ENTITY_COORDS_NO_OFFSET(prop1, bonecoords.x, bonecoords.y, bonecoords.z)
+                    type4:sleep(20)
                     OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
                     ENTITY.SET_ENTITY_COLLISION(prop1, info.propColl, info.propColl)
                     STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
