@@ -196,19 +196,25 @@ end
     elseif info.name == "Goofy Walk" or info.name == "Boss Walk" or info.name == "Goofy Run" then
         if ImGui.IsItemHovered() then
             ImGui.BeginTooltip()
-            ImGui.Text("Walk or run after playing the animation.")
+            ImGui.Text("Walk Or Run After Playing The Animation.")
             ImGui.EndTooltip()
         end
     elseif info.name == "Sleep" or info.name == "Sunbathe" then
         if ImGui.IsItemHovered() then
             ImGui.BeginTooltip()
-            ImGui.Text("Use 'W A S D' to adjust your position.")
+            ImGui.Text("Use 'W A S D' To Adjust Your Position.")
             ImGui.EndTooltip()
         end
     elseif info.name == "Crawl Forward Injured" then
         if ImGui.IsItemHovered() then
             ImGui.BeginTooltip()
             ImGui.Text("Use 'A/D' To Turn Right/Left.\nEquip Your Pistol For Better Results.")
+            ImGui.EndTooltip()
+        end
+    elseif info.name == "Mechanic 02" then
+        if ImGui.IsItemHovered() then
+            ImGui.BeginTooltip()
+            ImGui.Text("Face Away From The Vehicle\nBefore Playing The Animation.")
             ImGui.EndTooltip()
         end
     elseif info.name == "Commit Seppuku (×_×) (pistol)" then
