@@ -10,6 +10,8 @@ local animlist = require ("animdata")
 
 local anim_index = 0
 
+ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(PLAYER.PLAYER_ID())
+
 is_playing_anim = false
 
 anim_player:add_text("Search:")
@@ -61,7 +63,6 @@ anim_player:add_separator()
 
 anim_player:add_imgui(function()
     info = filteredAnims[anim_index+1]
-    ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(PLAYER.PLAYER_ID())
     local coords = ENTITY.GET_ENTITY_COORDS(ped, false)
     local heading = ENTITY.GET_ENTITY_HEADING(ped)
     local forwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
@@ -345,6 +346,23 @@ anim_player:add_imgui(function()
     end)
 end)
 
+script.register_looped("animation hotkey", function(script)
+    script:yield()
+    if is_playing_anim then
+        if PAD.IS_CONTROL_PRESSED(0, 252) then
+            if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
+                cleanup()
+                is_playing_anim = false
+            else
+                cleanup()
+                is_playing_anim = false
+                local current_coords = ENTITY.GET_ENTITY_COORDS(ped)
+                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(ped, current_coords.x, current_coords.y, current_coords.z, true, false, false)
+            end
+        end
+    end
+end)
+
 local ped_scenarios = {
     {scenario = "WORLD_HUMAN_STAND_MOBILE", name = "Browse Phone"},
     {scenario = "WORLD_HUMAN_CHEERING", name = "Clap"},
@@ -365,7 +383,6 @@ local ped_scenarios = {
     {scenario = "WORLD_HUMAN_STAND_FISHING", name = "Go Fishing"},
     {scenario = "WORLD_HUMAN_HANG_OUT_STREET", name = "Hangout (conversate)"},
     {scenario = "WORLD_HUMAN_STRIP_WATCH_STAND", name = "Hangout (dance)"},
-    {scenario = "WORLD_HUMAN_HIKER", name = "Hiker"},
     {scenario = "WORLD_HUMAN_BUM_FREEWAY", name = "HOBO Begging"},
     {scenario = "PROP_HUMAN_BUM_SHOPPING_CART", name = "HOBO Leaning"},
     {scenario = "WORLD_HUMAN_BUM_SLUMPED", name = "HOBO Sleeping"},
@@ -397,8 +414,8 @@ local ped_scenarios = {
     {scenario = "WORLD_HUMAN_PROSTITUTE_HIGH_CLASS", name = "Prostitute: High-Class"},
     {scenario = "WORLD_HUMAN_PROSTITUTE_LOW_CLASS", name = "Prostitute: Low-Class"},
     {scenario = "WORLD_HUMAN_GUARD_PATROL", name = "Security Guard (check)"},
-    {scenario = "WORLD_HUMAN_GUARD_STAND", name = "Security Guar (stand)"},
-    {scenario = "WORLD_HUMAN_SECURITY_SHINE_TORCH", name = "Security Guar (torch)"},
+    {scenario = "WORLD_HUMAN_GUARD_STAND", name = "Security Guard (stand)"},
+    {scenario = "WORLD_HUMAN_SECURITY_SHINE_TORCH", name = "Security Guard (torch)"},
     {scenario = "WORLD_HUMAN_SMOKING", name = "Smoke Cigarette"},
     {scenario = "WORLD_HUMAN_SMOKING_POT", name = "Smoke Weed"},
     {scenario = "PROP_HUMAN_SEAT_ARMCHAIR", name = "Sit On Armchair"},
@@ -439,7 +456,9 @@ local ped_scenarios = {
 }
 
 local scenario_index = 0
+
 local searchQuery = ""
+
 is_playing_scenario = false
 
 scenario_player:add_text("Search:")
@@ -478,14 +497,14 @@ scenario_player:add_imgui(displayFilteredList)
 scenario_player:add_separator()
 
 scenario_player:add_imgui(function()
-    local data = filteredScenarios[scenario_index+1]
-    local ped = self.get_ped()
     if ImGui.Button("   Play    ") then
+        local data = filteredScenarios[scenario_index+1]
+        local coords = ENTITY.GET_ENTITY_COORDS(ped, false)
+        local heading = ENTITY.GET_ENTITY_HEADING(ped)
+        local forwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
+        local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
+
         if data.name == "Cook On BBQ" then
-            local coords = ENTITY.GET_ENTITY_COORDS(ped, false)
-            local heading = ENTITY.GET_ENTITY_HEADING(ped)
-            local forwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
-            local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
             script.run_in_fiber(function()
                 while not STREAMING.HAS_MODEL_LOADED(286252949) do
                     STREAMING.REQUEST_MODEL(286252949)
@@ -499,8 +518,9 @@ scenario_player:add_imgui(function()
 			    TASK.TASK_START_SCENARIO_IN_PLACE(ped, data.scenario, -1, true)
                 is_playing_scenario = true
             end)
+
         else
-            script.run_in_fiber(function()
+            script.run_in_fiber(function(script)
 		        TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
 			    TASK.TASK_START_SCENARIO_IN_PLACE(ped, data.scenario, -1, true)
                 is_playing_scenario = true
@@ -531,6 +551,7 @@ scenario_player:add_imgui(function()
             ENTITY.DELETE_ENTITY(bbq)
             ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(bbq)
 			TASK.CLEAR_PED_TASKS(ped)
+            PED.RESET_PED_MOVEMENT_CLIPSET(ped, 0.0)
             is_playing_scenario = false
 		end)
     end
@@ -557,22 +578,13 @@ scenario_player:add_imgui(function()
     end)
 end)
 
-script.register_looped("", function(script)
+script.register_looped("scenario hotkey", function(script)
     script:yield()
-    if is_playing_anim or is_playing_scenario then
+    if is_playing_scenario then
         if PAD.IS_CONTROL_PRESSED(0, 252) then
-            if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
-            cleanup()
-            is_playing_anim = false
-            is_playing_scenario = false
             ENTITY.DELETE_ENTITY(bbq)
-            else
-                cleanup()
-                is_playing_anim = false
-                is_playing_scenario = false
-                local current_coords = ENTITY.GET_ENTITY_COORDS(ped)
-                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(ped, current_coords.x, current_coords.y, current_coords.z, true, false, false)
-            end
+            TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
+            is_playing_scenario = false
         end
     end
 end)
