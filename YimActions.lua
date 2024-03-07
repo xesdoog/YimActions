@@ -551,7 +551,6 @@ scenario_player:add_imgui(function()
             ENTITY.DELETE_ENTITY(bbq)
             ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(bbq)
 			TASK.CLEAR_PED_TASKS(ped)
-            PED.RESET_PED_MOVEMENT_CLIPSET(ped, 0.0)
             is_playing_scenario = false
 		end)
     end
