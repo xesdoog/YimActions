@@ -15,5 +15,13 @@
 ##
 ##
 
+
+![Screenshot 2024-01-30 111821](https://github.com/YimMenu-Lua/SAMURAI-Scenarios/assets/66764345/0158d270-f870-415e-9033-cfd48d727573)
+
 > [!NOTE]
 > From now on, this will be the main script. It contains both [SAMURAI's Scenarios](https://github.com/YimMenu-Lua/SAMURAI-Scenarios) and [SAMURAI's Animations](https://github.com/YimMenu-Lua/SAMURAI-Animations) so the standalone scripts will not be updated any further. All new updates will be in this repo.
+
+## Known Issues :
+
+- Trying to search for an animation that doesn't exist will throw a nil value error. This only happens with Animations not Scenarios because the animation script has a function that constantly looks for the anim index and if there isn't one, it will **PANIK**. 
+> If you don't know what any of that means, ignore it. It's not really an issue but an "_acoustic_" coding on my part.
