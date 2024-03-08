@@ -10,6 +10,11 @@ local animlist = require ("animdata")
 
 local anim_index = 0
 
+local flag_loop = 0
+local flag_freeze = 0
+local flag_upperbody = 0
+local flag_control = 0
+
 ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(PLAYER.PLAYER_ID())
 
 is_playing_anim = false
@@ -32,7 +37,7 @@ anim_player:add_imgui(function()
 	else
 		is_typing = false
 	end
-    ImGui.PushItemWidth(300)
+    ImGui.PushItemWidth(350)
 end)
 
 local filteredAnims = {}
@@ -62,6 +67,45 @@ anim_player:add_imgui(displayFilteredList)
 anim_player:add_separator()
 
 anim_player:add_imgui(function()
+    controllable, used = ImGui.Checkbox("Allow Control", controllable, true)
+    ImGui.SameLine()
+    ImGui.TextDisabled("(?)")
+    if ImGui.IsItemHovered() then
+        ImGui.BeginTooltip()
+        ImGui.Text("Allows you to keep control of your character and/or vehicle.\nIf paired with 'Upper Body Only', you can play animations\nand walk/run around.")
+        ImGui.EndTooltip()
+    end
+    ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+    looped, used = ImGui.Checkbox("Loop", looped, true)
+    ImGui.SameLine()
+    ImGui.TextDisabled("(?)")
+    if ImGui.IsItemHovered() then
+        ImGui.BeginTooltip()
+        ImGui.Text("Plays the animation forever unless\nyou manually stop it.")
+        ImGui.EndTooltip()
+    end
+    upperbody, used = ImGui.Checkbox("Upper Body Only", upperbody, true)
+    ImGui.SameLine()
+    ImGui.TextDisabled("(?)")
+    if ImGui.IsItemHovered() then
+        ImGui.BeginTooltip()
+        ImGui.Text("Only plays the animation on you character's upperbody (from the waist up).")
+        ImGui.EndTooltip()
+    end
+    ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+    freeze, used = ImGui.Checkbox("Freeze", freeze, true)
+    ImGui.SameLine()
+    ImGui.TextDisabled("(?)")
+    if ImGui.IsItemHovered() then
+        ImGui.BeginTooltip()
+        ImGui.Text("Freezes the animation at the very last frame.\nUsefull for ragdoll or sleeping animations for example.")
+        ImGui.EndTooltip()
+    end
+end)
+
+anim_player:add_separator()
+
+anim_player:add_imgui(function()
     info = filteredAnims[anim_index+1]
     local coords = ENTITY.GET_ENTITY_COORDS(ped, false)
     local heading = ENTITY.GET_ENTITY_HEADING(ped)
@@ -78,6 +122,7 @@ anim_player:add_imgui(function()
             ENTITY.DELETE_ENTITY(prop2)
             ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
             GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
+            STREAMING.REMOVE_ANIM_DICT(info.dict)
             if STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) then
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
                 coroutine.yield()
@@ -86,6 +131,21 @@ anim_player:add_imgui(function()
     end
 
     if ImGui.Button("   Play    ") then
+
+        if looped == true then
+            flag_loop = 1
+        end
+        if freeze then
+            flag_freeze = 2
+        end
+        if upperbody then
+            flag_upperbody = 16
+        end
+        if controllable then
+            flag_control = 32
+        end
+        local flag = flag_loop + flag_freeze + flag_upperbody + flag_control
+
         if info.type == 1 then
             cleanup()
             script.run_in_fiber(function()
@@ -98,10 +158,9 @@ anim_player:add_imgui(function()
                 STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
                 while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
-                    STREAMING.REQUEST_ANIM_SET(info.anim)
                     coroutine.yield()
                 end
-                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, info.flag, 1.0, false, false, false)
+                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
                 is_playing_anim = true
             end)
 
@@ -114,10 +173,9 @@ anim_player:add_imgui(function()
                 end
                 while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
-                    STREAMING.REQUEST_ANIM_SET(info.anim)
                     coroutine.yield()
                 end
-                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, info.flag, 0, false, false, false)
+                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 0, false, false, false)
                 type2:sleep(info.ptfxdelay)
                 GRAPHICS.USE_PARTICLE_FX_ASSET(info.ptfxdict)
                 loopedFX = GRAPHICS.START_NETWORKED_PARTICLE_FX_LOOPED_ON_ENTITY_BONE(info.ptfxname, ped, info.ptfxOffx, info.ptfxOffy, info.ptfxOffz, 0.0, 0.0, 0.0, boneIndex, info.ptfxscale, false, false, false, 0, 0, 0, 0)
@@ -137,10 +195,9 @@ anim_player:add_imgui(function()
                 STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
                 while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
-                    STREAMING.REQUEST_ANIM_SET(info.anim)
                     coroutine.yield()
                 end
-                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, info.flag, 1.0, false, false, false)
+                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
                 is_playing_anim = true
             end)
 
@@ -153,12 +210,11 @@ anim_player:add_imgui(function()
                 end
                 while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
-                    STREAMING.REQUEST_ANIM_SET(info.anim)
                     coroutine.yield()
                 end
-                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, info.flag, 1.0, false, false, false)
+                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
                 prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0, true, true, false)
-                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(prop1, bonecoords.x, bonecoords.y, bonecoords.z)
+                ENTITY.SET_ENTITY_COORDS(prop1, bonecoords.x + info.posx, bonecoords.y + info.posy, bonecoords.z + info.posz)
                 type4:sleep(20)
                 OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
                 ENTITY.SET_ENTITY_COLLISION(prop1, info.propColl, info.propColl)
@@ -186,10 +242,9 @@ anim_player:add_imgui(function()
                 type5:sleep(50)
                 while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
-                    STREAMING.REQUEST_ANIM_SET(info.anim)
                     coroutine.yield()
                 end
-                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, info.flag, 0.0, false, false, false)
+                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 0.0, false, false, false)
                 is_playing_anim = true
             end)
 
@@ -198,46 +253,51 @@ anim_player:add_imgui(function()
             script.run_in_fiber(function(script)
                 while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
-                    STREAMING.REQUEST_ANIM_SET(info.anim)
                     coroutine.yield()
                 end
-                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, info.flag, 0.0, false, false, false)
+                TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 0.0, false, false, false)
                 is_playing_anim = true
             end)
         end
     end
 
-    if info.name == "Crawl Forward" then
+    if info.name == "Movement: Crawl Forward" then
         if ImGui.IsItemHovered() then
             ImGui.BeginTooltip()
-            ImGui.Text("Crawl Forward:\nUse 'A/D' To Turn Right/Left.")
+            ImGui.Text("Use 'A/D' To Turn Right/Left.")
             ImGui.EndTooltip()
         end
-    elseif info.name == "Goofy Walk" or info.name == "Boss Walk" or info.name == "Goofy Run" then
+    elseif info.name == "Movement: Goofy Walk" or info.name == "Movement: Boss Walk" or info.name == "Movement: Goofy Run" then
         if ImGui.IsItemHovered() then
             ImGui.BeginTooltip()
             ImGui.Text("Walk Or Run After Playing The Animation.")
             ImGui.EndTooltip()
         end
-    elseif info.name == "Sleep" or info.name == "Sunbathe" then
+    elseif info.name == "MISC: Sleep" then
+        if ImGui.IsItemHovered() then
+            ImGui.BeginTooltip()
+            ImGui.Text("Stop previous animation before playing this one\nor you will fall through the ground.\n\nUse 'W A S D' To Adjust Your Position.")
+            ImGui.EndTooltip()
+        end
+    elseif info.name == "MISC: Sunbathe" then
         if ImGui.IsItemHovered() then
             ImGui.BeginTooltip()
             ImGui.Text("Use 'W A S D' To Adjust Your Position.")
             ImGui.EndTooltip()
         end
-    elseif info.name == "Crawl Forward Injured" then
+    elseif info.name == "Movement: Crawl Forward (injured)" then
         if ImGui.IsItemHovered() then
             ImGui.BeginTooltip()
             ImGui.Text("Use 'A/D' To Turn Right/Left.\nEquip Your Pistol For Better Results.")
             ImGui.EndTooltip()
         end
-    elseif info.name == "Mechanic 02" then
+    elseif info.name == "Car: Mechanic 02" then
         if ImGui.IsItemHovered() then
             ImGui.BeginTooltip()
             ImGui.Text("Face Away From The Vehicle\nBefore Playing The Animation.")
             ImGui.EndTooltip()
         end
-    elseif info.name == "Commit Seppuku (×_×) (pistol)" then
+    elseif info.name == "Action: Commit Seppuku (×_×) (pistol)" then
         if ImGui.IsItemHovered() then
             ImGui.BeginTooltip()
             ImGui.Text("Equip Your Pistol For Better Results.")
@@ -245,31 +305,7 @@ anim_player:add_imgui(function()
         end
     end
 
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
+    ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
 
     if ImGui.Button("   Stop    ") then
         if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
@@ -297,15 +333,8 @@ anim_player:add_imgui(function()
             ENTITY.DELETE_ENTITY(prop2)
             ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
             TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
-            while STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
-                STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-                coroutine.yield()
-            end
-            while STREAMING.DOES_ANIM_DICT_EXIST(info.dict) and STREAMING.DOES_ANIM_SET_EXIST(info.anim) do
-                STREAMING.REMOVE_ANIM_DICT(info.dict)
-                STREAMING.REMOVE_ANIM_SET(info.anim)
-                coroutine.yield()
-            end
+            STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
+            STREAMING.REMOVE_ANIM_DICT(info.dict)
         -- //fix player clipping through the ground after ending low-positioned anims//
             local current_coords = ENTITY.GET_ENTITY_COORDS(ped)
             if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
@@ -325,15 +354,8 @@ anim_player:add_imgui(function()
             ENTITY.DELETE_ENTITY(prop2)
             ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
             TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
-            while STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
-                STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-                coroutine.yield()
-            end
-            while STREAMING.DOES_ANIM_DICT_EXIST(info.dict) and STREAMING.DOES_ANIM_SET_EXIST(info.anim) do
-                STREAMING.REMOVE_ANIM_DICT(info.dict)
-                STREAMING.REMOVE_ANIM_SET(info.anim)
-                coroutine.yield()
-            end
+            STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
+            STREAMING.REMOVE_ANIM_DICT(info.dict)
         -- //fix player clipping through the ground after ending low-positioned anims//
             local current_coords = ENTITY.GET_ENTITY_COORDS(ped)
             if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
