@@ -123,26 +123,31 @@ anim_player:add_imgui(function()
             ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
             GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
             STREAMING.REMOVE_ANIM_DICT(info.dict)
-            if STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) then
-                STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-                coroutine.yield()
-            end
+            STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
         end)
     end
 
     if ImGui.Button("   Play    ") then
 
-        if looped == true then
+        if looped then
             flag_loop = 1
+        else
+            flag_loop = 0
         end
         if freeze then
             flag_freeze = 2
+        else
+            flag_freeze = 0
         end
         if upperbody then
             flag_upperbody = 16
+        else
+            flag_upperbody = 0
         end
         if controllable then
             flag_control = 32
+        else
+            flag_control = 0
         end
         local flag = flag_loop + flag_freeze + flag_upperbody + flag_control
 
@@ -156,7 +161,7 @@ anim_player:add_imgui(function()
                 prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0, true, true, false)
                 ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, ped, boneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
                 STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
-                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
+                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
                     coroutine.yield()
                 end
@@ -171,7 +176,7 @@ anim_player:add_imgui(function()
                     STREAMING.REQUEST_NAMED_PTFX_ASSET(info.ptfxdict)
                     coroutine.yield()
                 end
-                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
+                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
                     coroutine.yield()
                 end
@@ -193,7 +198,7 @@ anim_player:add_imgui(function()
                 ENTITY.SET_ENTITY_HEADING(prop1, heading)
                 OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
                 STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
-                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
+                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
                     coroutine.yield()
                 end
@@ -208,7 +213,7 @@ anim_player:add_imgui(function()
                     STREAMING.REQUEST_MODEL(info.prop1)
                     coroutine.yield()
                 end
-                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
+                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
                     coroutine.yield()
                 end
@@ -240,7 +245,7 @@ anim_player:add_imgui(function()
                 GRAPHICS.USE_PARTICLE_FX_ASSET(info.ptfxdict)
                 loopedFX = GRAPHICS.START_NETWORKED_PARTICLE_FX_LOOPED_ON_ENTITY(info.ptfxname, prop1, info.ptfxOffx, info.ptfxOffy, info.ptfxOffz, 0.0, 0.0, 0.0, info.ptfxscale, false, false, false, 0, 0, 0, 0)
                 type5:sleep(50)
-                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
+                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
                     coroutine.yield()
                 end
@@ -251,7 +256,7 @@ anim_player:add_imgui(function()
         else
             cleanup()
             script.run_in_fiber(function(script)
-                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) and not STREAMING.HAS_ANIM_SET_LOADED(info.anim) do
+                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
                     coroutine.yield()
                 end
