@@ -67,39 +67,50 @@ anim_player:add_imgui(displayFilteredList)
 anim_player:add_separator()
 
 anim_player:add_imgui(function()
-    controllable, used = ImGui.Checkbox("Allow Control", controllable, true)
+    manualFlags, used = ImGui.Checkbox("Edit Animation Flags", manualFlags, true)
     ImGui.SameLine()
-    ImGui.TextDisabled("(?)")
-    if ImGui.IsItemHovered() then
-        ImGui.BeginTooltip()
-        ImGui.Text("Allows you to keep control of your character and/or vehicle.\nIf paired with 'Upper Body Only', you can play animations\nand walk/run around.")
-        ImGui.EndTooltip()
-    end
-    ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
-    looped, used = ImGui.Checkbox("Loop", looped, true)
-    ImGui.SameLine()
-    ImGui.TextDisabled("(?)")
-    if ImGui.IsItemHovered() then
-        ImGui.BeginTooltip()
-        ImGui.Text("Plays the animation forever unless\nyou manually stop it.")
-        ImGui.EndTooltip()
-    end
-    upperbody, used = ImGui.Checkbox("Upper Body Only", upperbody, true)
-    ImGui.SameLine()
-    ImGui.TextDisabled("(?)")
-    if ImGui.IsItemHovered() then
-        ImGui.BeginTooltip()
-        ImGui.Text("Only plays the animation on you character's upperbody (from the waist up).")
-        ImGui.EndTooltip()
-    end
-    ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
-    freeze, used = ImGui.Checkbox("Freeze", freeze, true)
-    ImGui.SameLine()
-    ImGui.TextDisabled("(?)")
-    if ImGui.IsItemHovered() then
-        ImGui.BeginTooltip()
-        ImGui.Text("Freezes the animation at the very last frame.\nUsefull for ragdoll or sleeping animations for example.")
-        ImGui.EndTooltip()
+        ImGui.TextDisabled("(?)")
+        if ImGui.IsItemHovered() then
+            ImGui.BeginTooltip()
+            ImGui.Text("Allows you to customize how the animation plays.\n\nExample: if an animation is set to loop but you want it\nto freeze, activate this then choose your desired settings.")
+            ImGui.EndTooltip()
+        end
+    if manualFlags then
+        ImGui.Separator()
+        controllable, used = ImGui.Checkbox("Allow Control", controllable, true)
+        ImGui.SameLine()
+        ImGui.TextDisabled("(?)")
+        if ImGui.IsItemHovered() then
+            ImGui.BeginTooltip()
+            ImGui.Text("Allows you to keep control of your character and/or vehicle.\nIf paired with 'Upper Body Only', you can play animations\nand walk/run around.")
+            ImGui.EndTooltip()
+        end
+        ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+        looped, used = ImGui.Checkbox("Loop", looped, true)
+        ImGui.SameLine()
+        ImGui.TextDisabled("(?)")
+        if ImGui.IsItemHovered() then
+            ImGui.BeginTooltip()
+            ImGui.Text("Plays the animation forever unless\nyou manually stop it.")
+            ImGui.EndTooltip()
+        end
+        upperbody, used = ImGui.Checkbox("Upper Body Only", upperbody, true)
+        ImGui.SameLine()
+        ImGui.TextDisabled("(?)")
+        if ImGui.IsItemHovered() then
+            ImGui.BeginTooltip()
+            ImGui.Text("Only plays the animation on you character's upperbody (from the waist up).")
+            ImGui.EndTooltip()
+        end
+        ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+        freeze, used = ImGui.Checkbox("Freeze", freeze, true)
+        ImGui.SameLine()
+        ImGui.TextDisabled("(?)")
+        if ImGui.IsItemHovered() then
+            ImGui.BeginTooltip()
+            ImGui.Text("Freezes the animation at the very last frame.\nUsefull for ragdoll or sleeping animations for example.")
+            ImGui.EndTooltip()
+        end
     end
 end)
 
@@ -129,27 +140,31 @@ anim_player:add_imgui(function()
 
     if ImGui.Button("   Play    ") then
 
-        if looped then
-            flag_loop = 1
+        if manualFlags then
+            if looped then
+                flag_loop = 1
+            else
+                flag_loop = 0
+            end
+            if freeze then
+                flag_freeze = 2
+            else
+                flag_freeze = 0
+            end
+            if upperbody then
+                flag_upperbody = 16
+            else
+                flag_upperbody = 0
+            end
+            if controllable then
+                flag_control = 32
+            else
+                flag_control = 0
+            end
+            flag = flag_loop + flag_freeze + flag_upperbody + flag_control
         else
-            flag_loop = 0
+            flag = info.flag
         end
-        if freeze then
-            flag_freeze = 2
-        else
-            flag_freeze = 0
-        end
-        if upperbody then
-            flag_upperbody = 16
-        else
-            flag_upperbody = 0
-        end
-        if controllable then
-            flag_control = 32
-        else
-            flag_control = 0
-        end
-        local flag = flag_loop + flag_freeze + flag_upperbody + flag_control
 
         if info.type == 1 then
             cleanup()
