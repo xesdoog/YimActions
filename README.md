@@ -1,13 +1,13 @@
 # <p align="center"> YimActions </p>
 <p align="center"> Play GTA V Animations &amp; Scenarios Using YimMenu </p>
 
-![Terminus](https://github.com/xesdoog/YimActions/assets/66764345/473f5b95-6abe-4a80-a502-49d5a9635b1c)
+![Screenshot 2024-02-08 040632](https://github.com/xesdoog/YimActions/assets/66764345/9bdde22d-0efa-4d6c-8385-6c0be1d79a99)
 
-<img align="left" src="https://github.com/xesdoog/YimActions/assets/66764345/ea2ae43d-0498-46f8-99a7-020c405ba2d5">
+![samurais_animations](https://github.com/xesdoog/YimActions/assets/66764345/3a013773-02a8-4f3a-8478-abc9252e7e54)
 
-<img align="right" src="https://github.com/xesdoog/YimActions/assets/66764345/133238a0-723d-40cf-9f8b-fcbab5767e71">
+![samurais_animations_2](https://github.com/xesdoog/YimActions/assets/66764345/74d8cde9-c681-443e-8fb9-94ba86a054b6)
 
-![Screenshot 2024-01-30 111821](https://github.com/YimMenu-Lua/SAMURAI-Scenarios/assets/66764345/0158d270-f870-415e-9033-cfd48d727573)
+![samurais_scenarios](https://github.com/xesdoog/YimActions/assets/66764345/cd9ce359-3fd7-4092-96b8-d51c3e20e7e6)
 
 > [!NOTE]
 > From now on, this will be the main script. It contains both [SAMURAI's Scenarios](https://github.com/YimMenu-Lua/SAMURAI-Scenarios) and [SAMURAI's Animations](https://github.com/YimMenu-Lua/SAMURAI-Animations) so the standalone scripts will not be updated any further. All new updates will be in this repo.
