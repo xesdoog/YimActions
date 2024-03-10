@@ -210,7 +210,7 @@ anim_player:add_imgui(function()
                     coroutine.yield()
                 end
                 prop1 = OBJECT.CREATE_OBJECT(info.prop1, coords.x + forwardX /1.7, coords.y + forwardY /1.7, coords.z, true, true, false)
-                ENTITY.SET_ENTITY_HEADING(prop1, heading)
+                ENTITY.SET_ENTITY_HEADING(prop1, heading + info.rotz)
                 OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
                 STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
                 while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
@@ -331,7 +331,6 @@ anim_player:add_imgui(function()
         if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
             cleanup()
             is_playing_anim = false
-            ENTITY.DELETE_ENTITY(bbq)
         else
             cleanup()
             is_playing_anim = false
