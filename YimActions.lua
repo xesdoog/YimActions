@@ -639,7 +639,7 @@ script.register_looped("scenario hotkey", function(script)
     if is_playing_scenario then
         if PAD.IS_CONTROL_PRESSED(0, 252) then
             ENTITY.DELETE_ENTITY(bbq)
-            TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
+            TASK.CLEAR_PED_TASKS(ped)
             is_playing_scenario = false
         end
     end
