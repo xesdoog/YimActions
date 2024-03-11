@@ -129,9 +129,7 @@ anim_player:add_imgui(function()
         script.run_in_fiber(function()
             TASK.CLEAR_PED_TASKS(ped)
             ENTITY.DELETE_ENTITY(prop1)
-            ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop1)
             ENTITY.DELETE_ENTITY(prop2)
-            ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
             GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
             STREAMING.REMOVE_ANIM_DICT(info.dict)
             STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
@@ -175,7 +173,6 @@ anim_player:add_imgui(function()
                 end
                 prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0, true, true, false)
                 ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, ped, boneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
-                STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
                 while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
                     coroutine.yield()
@@ -212,7 +209,6 @@ anim_player:add_imgui(function()
                 prop1 = OBJECT.CREATE_OBJECT(info.prop1, coords.x + forwardX /1.7, coords.y + forwardY /1.7, coords.z, true, true, false)
                 ENTITY.SET_ENTITY_HEADING(prop1, heading + info.rotz)
                 OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
-                STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
                 while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
                     coroutine.yield()
@@ -238,7 +234,6 @@ anim_player:add_imgui(function()
                 type4:sleep(20)
                 OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
                 ENTITY.SET_ENTITY_COLLISION(prop1, info.propColl, info.propColl)
-                STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
                 is_playing_anim = true
             end)
 
@@ -252,7 +247,6 @@ anim_player:add_imgui(function()
                 prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0, true, true, false)
                 ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, ped, boneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
                 type5:sleep(50)
-                STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(info.prop1)
                 while not STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
                     STREAMING.REQUEST_NAMED_PTFX_ASSET(info.ptfxdict)
                     coroutine.yield()
@@ -267,6 +261,29 @@ anim_player:add_imgui(function()
                 TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 0.0, false, false, false)
                 is_playing_anim = true
             end)
+
+        elseif info.type == 6 then
+                cleanup()
+                script.run_in_fiber(function()
+                    while not STREAMING.HAS_MODEL_LOADED(info.prop1) do
+                        STREAMING.REQUEST_MODEL(info.prop1)
+                        coroutine.yield()
+                    end
+                    prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0, true, true, false)
+                    ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, ped, boneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
+                    while not STREAMING.HAS_MODEL_LOADED(info.prop2) do
+                        STREAMING.REQUEST_MODEL(info.prop2)
+                        coroutine.yield()
+                    end
+                    prop2 = OBJECT.CREATE_OBJECT(info.prop2, 0.0, 0.0, 0, true, true, false)
+                    ENTITY.ATTACH_ENTITY_TO_ENTITY(prop2, ped, PED.GET_PED_BONE_INDEX(ped, info.bone2), info.posx2, info.posy2, info.posz2, info.rotx2, info.roty2, info.rotz2, false, false, false, false, 2, true, 1)
+                    while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
+                        STREAMING.REQUEST_ANIM_DICT(info.dict)
+                        coroutine.yield()
+                    end
+                    TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                    is_playing_anim = true
+                end)
 
         else
             cleanup()
@@ -554,7 +571,6 @@ scenario_player:add_imgui(function()
                 bbq = OBJECT.CREATE_OBJECT(286252949, coords.x + (forwardX), coords.y + (forwardY), coords.z, true, true, false)
                 ENTITY.SET_ENTITY_HEADING(bbq, heading)
                 OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(bbq)
-                STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(286252949)
 		        TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
 			    TASK.TASK_START_SCENARIO_IN_PLACE(ped, data.scenario, -1, true)
                 is_playing_scenario = true
