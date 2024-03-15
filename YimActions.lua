@@ -114,8 +114,6 @@ anim_player:add_imgui(function()
     end
 end)
 
-anim_player:add_separator()
-
 anim_player:add_imgui(function()
     info = filteredAnims[anim_index+1]
     local coords = ENTITY.GET_ENTITY_COORDS(ped, false)
@@ -124,7 +122,6 @@ anim_player:add_imgui(function()
     local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
     local boneIndex = PED.GET_PED_BONE_INDEX(ped, info.boneID)
     local bonecoords = PED.GET_PED_BONE_COORDS(ped, info.boneID)
-
     function cleanup()
         script.run_in_fiber(function()
             TASK.CLEAR_PED_TASKS(ped)
@@ -135,9 +132,7 @@ anim_player:add_imgui(function()
             STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
         end)
     end
-
     if ImGui.Button("   Play    ") then
-
         if manualFlags then
             if looped then
                 flag_loop = 1
@@ -163,7 +158,6 @@ anim_player:add_imgui(function()
         else
             flag = info.flag
         end
-
         if info.type == 1 then
             cleanup()
             script.run_in_fiber(function()
@@ -171,7 +165,7 @@ anim_player:add_imgui(function()
                     STREAMING.REQUEST_MODEL(info.prop1)
                     coroutine.yield()
                 end
-                prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0, true, true, false)
+                prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0.0, true, true, false)
                 ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, ped, boneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
                 while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
@@ -180,7 +174,6 @@ anim_player:add_imgui(function()
                 TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
                 is_playing_anim = true
             end)
-
         elseif info.type == 2 then
             cleanup()
             script.run_in_fiber(function(type2)
@@ -198,7 +191,6 @@ anim_player:add_imgui(function()
                 loopedFX = GRAPHICS.START_NETWORKED_PARTICLE_FX_LOOPED_ON_ENTITY_BONE(info.ptfxname, ped, info.ptfxOffx, info.ptfxOffy, info.ptfxOffz, 0.0, 0.0, 0.0, boneIndex, info.ptfxscale, false, false, false, 0, 0, 0, 0)
                 is_playing_anim = true
             end)
-
         elseif info.type == 3 then
             cleanup()
             script.run_in_fiber(function()
@@ -216,7 +208,6 @@ anim_player:add_imgui(function()
                 TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
                 is_playing_anim = true
             end)
-
         elseif info.type == 4 then
             cleanup()
             script.run_in_fiber(function(type4)
@@ -229,14 +220,13 @@ anim_player:add_imgui(function()
                     coroutine.yield()
                 end
                 TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
-                prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0, true, true, false)
+                prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0.0, true, true, false)
                 ENTITY.SET_ENTITY_COORDS(prop1, bonecoords.x + info.posx, bonecoords.y + info.posy, bonecoords.z + info.posz)
                 type4:sleep(20)
                 OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
                 ENTITY.SET_ENTITY_COLLISION(prop1, info.propColl, info.propColl)
                 is_playing_anim = true
             end)
-
         elseif info.type == 5 then
             cleanup()
             script.run_in_fiber(function(type5)
@@ -244,7 +234,7 @@ anim_player:add_imgui(function()
                     STREAMING.REQUEST_MODEL(info.prop1)
                     coroutine.yield()
                 end
-                prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0, true, true, false)
+                prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0.0, true, true, false)
                 ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, ped, boneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
                 type5:sleep(50)
                 while not STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
@@ -261,7 +251,6 @@ anim_player:add_imgui(function()
                 TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 0.0, false, false, false)
                 is_playing_anim = true
             end)
-
         elseif info.type == 6 then
                 cleanup()
                 script.run_in_fiber(function()
@@ -269,13 +258,13 @@ anim_player:add_imgui(function()
                         STREAMING.REQUEST_MODEL(info.prop1)
                         coroutine.yield()
                     end
-                    prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0, true, true, false)
+                    prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0.0, true, true, false)
                     ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, ped, boneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
                     while not STREAMING.HAS_MODEL_LOADED(info.prop2) do
                         STREAMING.REQUEST_MODEL(info.prop2)
                         coroutine.yield()
                     end
-                    prop2 = OBJECT.CREATE_OBJECT(info.prop2, 0.0, 0.0, 0, true, true, false)
+                    prop2 = OBJECT.CREATE_OBJECT(info.prop2, 0.0, 0.0, 0.0, true, true, false)
                     ENTITY.ATTACH_ENTITY_TO_ENTITY(prop2, ped, PED.GET_PED_BONE_INDEX(ped, info.bone2), info.posx2, info.posy2, info.posz2, info.rotx2, info.roty2, info.rotz2, false, false, false, false, 2, true, 1)
                     while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                         STREAMING.REQUEST_ANIM_DICT(info.dict)
@@ -284,7 +273,6 @@ anim_player:add_imgui(function()
                     TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
                     is_playing_anim = true
                 end)
-
         else
             cleanup()
             script.run_in_fiber(function(script)
@@ -297,7 +285,6 @@ anim_player:add_imgui(function()
             end)
         end
     end
-
     if info.name == "Movement: Crawl Forward" then
         if ImGui.IsItemHovered() then
             ImGui.BeginTooltip()
@@ -341,9 +328,7 @@ anim_player:add_imgui(function()
             ImGui.EndTooltip()
         end
     end
-
     ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
-
     if ImGui.Button("   Stop    ") then
         if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
             cleanup()
@@ -357,11 +342,13 @@ anim_player:add_imgui(function()
     end
     if ImGui.IsItemHovered() then
         ImGui.BeginTooltip()
-        ImGui.Text("TIP: You can also stop animations by pressing\n'X' on keyboard or 'LT' on controller.")
+        ImGui.Text("TIP: You can also stop animations by pressing\n'Delete' on keyboard or 'X' on controller.")
         ImGui.EndTooltip()
     end
 
     event.register_handler(menu_event.ScriptsReloaded, function()
+        PED.RESET_PED_MOVEMENT_CLIPSET(ped, 0.0)
+        PED.SET_PED_RAGDOLL_ON_COLLISION(ped, false)
         if is_playing_anim then
             GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
             ENTITY.DELETE_ENTITY(prop1)
@@ -381,8 +368,9 @@ anim_player:add_imgui(function()
             is_playing_anim = false
         end
     end)
-
     event.register_handler(menu_event.MenuUnloaded, function()
+        PED.RESET_PED_MOVEMENT_CLIPSET(ped, 0.0)
+        PED.SET_PED_RAGDOLL_ON_COLLISION(ped, false)
         if is_playing_anim then
             GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
             ENTITY.DELETE_ENTITY(prop1)
@@ -404,10 +392,130 @@ anim_player:add_imgui(function()
     end)
 end)
 
+anim_player:add_imgui(function()
+    ImGui.Separator()
+    ImGui.Text("Fun Features:")
+    clumsy, used = ImGui.Checkbox("Clumsy", clumsy, true)
+    ImGui.SameLine()
+    ImGui.TextDisabled("(?)")
+    if ImGui.IsItemHovered() then
+        ImGui.BeginTooltip()
+        ImGui.Text("Makes You Ragdoll When You\nCollide With Any Object.")
+        ImGui.EndTooltip()
+    end
+    ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+    drunk, used = ImGui.Checkbox("Drunk", drunk, true)
+    ImGui.SameLine()
+    ImGui.TextDisabled("(?)")
+    if ImGui.IsItemHovered() then
+        ImGui.BeginTooltip()
+        ImGui.Text("Makes You Very Drunk. Works Well With 'Clumsy' and 'ROD'.\nno camera shake because I hate it >:(")
+        ImGui.EndTooltip()
+    end
+    sexywalk, used = ImGui.Checkbox("Sexy Walk", sexywalk, true)
+    ImGui.SameLine()
+    ImGui.TextDisabled("(?)")
+    if ImGui.IsItemHovered() then
+        ImGui.BeginTooltip()
+        ImGui.Text("Turns You Into A Fine Ass.")
+        ImGui.EndTooltip()
+    end
+    ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+    lester, used = ImGui.Checkbox("Lester's Walk", lester, true)
+    ImGui.SameLine()
+    ImGui.TextDisabled("(?)")
+    if ImGui.IsItemHovered() then
+        ImGui.BeginTooltip()
+        ImGui.Text("Makes You Walk Like Lester.")
+        ImGui.EndTooltip()
+    end
+    rod, used = ImGui.Checkbox("ROD", rod, true)
+    ImGui.SameLine()
+    ImGui.TextDisabled("(?)")
+    if ImGui.IsItemHovered() then
+        ImGui.BeginTooltip()
+        ImGui.Text("Ragdoll On Demand:\n\nEnable This Then Press 'X' On Keyboard\nor 'LT' On Controller To Instantly Ragdoll.\nThe Longer You Hold The Button, The Longer You Stay On The Ground.")
+        ImGui.EndTooltip()
+    end
+    ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+    crouched, used = ImGui.Checkbox("Crouch", crouched, true)
+    ImGui.SameLine()
+    ImGui.TextDisabled("(?)")
+    if ImGui.IsItemHovered() then
+        ImGui.BeginTooltip()
+        ImGui.Text("Move While Crouched.")
+        ImGui.EndTooltip()
+    end
+    if drunk then
+        sexywalk = false
+        lester = false
+        crouched = false
+        script.run_in_fiber(function()
+            while not STREAMING.HAS_CLIP_SET_LOADED("MOVE_M@DRUNK@VERYDRUNK") do
+                STREAMING.REQUEST_CLIP_SET("MOVE_M@DRUNK@VERYDRUNK")
+                coroutine.yield()
+            end
+            PED.SET_PED_MOVEMENT_CLIPSET(ped, "MOVE_M@DRUNK@VERYDRUNK", 1.0)
+        end)
+    elseif sexywalk then
+        drunk = false
+        lester = false
+        crouched = false
+        script.run_in_fiber(function()
+            while not STREAMING.HAS_CLIP_SET_LOADED("move_f@sexy@a") do
+                STREAMING.REQUEST_CLIP_SET("move_f@sexy@a")
+                coroutine.yield()
+            end
+            PED.SET_PED_MOVEMENT_CLIPSET(ped, "move_f@sexy@a", 1.0)
+        end)
+    elseif crouched then
+        drunk = false
+        lester = false
+        sexywalk = false
+        script.run_in_fiber(function()
+            while not STREAMING.HAS_CLIP_SET_LOADED("move_ped_crouched") do
+                STREAMING.REQUEST_CLIP_SET("move_ped_crouched")
+                coroutine.yield()
+            end
+            PED.SET_PED_MOVEMENT_CLIPSET(ped, "move_ped_crouched", 0.2)
+        end)
+    elseif lester then
+        drunk = false
+        sexywalk = false
+        crouched = false
+        script.run_in_fiber(function()
+            while not STREAMING.HAS_CLIP_SET_LOADED("move_lester_CaneUp") do
+                STREAMING.REQUEST_CLIP_SET("move_lester_CaneUp")
+                coroutine.yield()
+            end
+            PED.SET_PED_MOVEMENT_CLIPSET(ped, "move_lester_CaneUp", 0.2)
+        end)
+    else
+        PED.RESET_PED_MOVEMENT_CLIPSET(ped, 0.0)
+    end
+end)
+
+script.register_looped("Ragdoll Loop", function(script)
+    script:yield()
+    if clumsy then
+        rod = false
+        if PED.IS_PED_RAGDOLL(ped) then
+            script:sleep(5000)
+            return
+        end
+        PED.SET_PED_RAGDOLL_ON_COLLISION(ped, true)
+    elseif rod then
+        clumsy = false
+        if PAD.IS_CONTROL_PRESSED(0, 252) then
+            PED.SET_PED_TO_RAGDOLL(ped, 500, 500, 1, true, true, false)
+        end
+    end
+end)
+
 script.register_looped("animation hotkey", function(script)
     script:yield()
     if is_playing_anim then
-        if PAD.IS_CONTROL_PRESSED(0, 252) then
+        if PAD.IS_CONTROL_PRESSED(0, 256) then
             if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
                 cleanup()
                 is_playing_anim = false
@@ -613,7 +721,7 @@ scenario_player:add_imgui(function()
     end
     if ImGui.IsItemHovered() then
         ImGui.BeginTooltip()
-        ImGui.Text("TIP: You can also stop scenarios by pressing\n'X' on keyboard or 'LT' on controller.")
+        ImGui.Text("TIP: You can also stop scenarios by pressing\n'Delete' on keyboard or 'X' on controller.")
         ImGui.EndTooltip()
     end
 
