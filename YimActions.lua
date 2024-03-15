@@ -745,7 +745,7 @@ end)
 script.register_looped("scenario hotkey", function(script)
     script:yield()
     if is_playing_scenario then
-        if PAD.IS_CONTROL_PRESSED(0, 252) then
+        if PAD.IS_CONTROL_PRESSED(0, 256) then
             ENTITY.DELETE_ENTITY(bbq)
             TASK.CLEAR_PED_TASKS(ped)
             is_playing_scenario = false
