@@ -507,7 +507,7 @@ script.register_looped("Ragdoll Loop", function(script)
     elseif rod then
         clumsy = false
         if PAD.IS_CONTROL_PRESSED(0, 252) then
-            PED.SET_PED_TO_RAGDOLL(ped, 500, 500, 1, true, true, false)
+            PED.SET_PED_TO_RAGDOLL(ped, 1000, 1000, 0, true, true, false)
         end
     end
 end)
