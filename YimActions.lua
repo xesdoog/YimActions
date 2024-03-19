@@ -1,35 +1,60 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 
 YimActions = gui.get_tab("YimActions")
-
 anim_player = YimActions:add_tab("SAMURAI's Animations")
-
 scenario_player = YimActions:add_tab("SAMURAI's Scenarios")
-
 local animlist = require ("animdata")
-
 local anim_index = 0
-
 local flag_loop = 0
 local flag_freeze = 0
 local flag_upperbody = 0
 local flag_control = 0
-
-ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(PLAYER.PLAYER_ID())
-
+script.register_looped("playerID", function(playerID)
+    if NETWORK.NETWORK_IS_SESSION_ACTIVE() then
+        is_online = true
+        onlinePed = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(PLAYER.PLAYER_ID())
+    else
+        is_online = false
+        spPed = self.get_ped()
+    end
+    if is_online then
+        ped = onlinePed
+    else
+        ped = spPed
+    end
+    playerID:yield()
+end)
+-- anim_player:add_imgui(function()
+--     if ImGui.Button("Debug") then
+--         local playerModel = ENTITY.GET_ENTITY_MODEL(ped)
+--         local playerName = ""
+--         if not is_online then
+--             if playerModel == 2602752943 then
+--                 playerName = "Franklin"
+--             elseif playerModel == 225514697 then
+--                 playerName = "Michael"
+--             elseif playerModel == 2608926626 then
+--                 playerName = "Trevor"
+--             else
+--                 playerName = "Invalid player model!"
+--             end
+--         elseif stats.get_int("MPPLY_LAST_MP_CHAR") == 0 then
+--             playerName = "Online character 1"
+--         else
+--             playerName = "Online character 2"
+--         end
+--         gui.show_message("Debug","Online: "..tostring(is_online).."\nPlayer ID: "..tostring(ped).."\nPlayer Name: "..playerName)
+--     end
+-- end)
 is_playing_anim = false
-
 anim_player:add_text("Search:")
-
 local searchQuery = ""
-
 local is_typing = false
 script.register_looped("", function()
 	if is_typing then
 		PAD.DISABLE_ALL_CONTROL_ACTIONS(0)
 	end
 end)
-
 anim_player:add_imgui(function()
     searchQuery, used = ImGui.InputText("", searchQuery, 32)
     if ImGui.IsItemActive() then
@@ -39,7 +64,6 @@ anim_player:add_imgui(function()
 	end
     ImGui.PushItemWidth(350)
 end)
-
 local filteredAnims = {}
 local function updatefilteredAnims()
     filteredAnims = {}
@@ -52,7 +76,6 @@ local function updatefilteredAnims()
         return a.name < b.name
     end)
 end
-
 local function displayFilteredList()
     updatefilteredAnims()
     local animNames = {}
@@ -61,11 +84,8 @@ local function displayFilteredList()
     end
     anim_index, used = ImGui.ListBox(" ", anim_index, animNames, #filteredAnims)
 end
-
 anim_player:add_imgui(displayFilteredList)
-
 anim_player:add_separator()
-
 anim_player:add_imgui(function()
     manualFlags, used = ImGui.Checkbox("Edit Animation Flags", manualFlags, true)
     ImGui.SameLine()
@@ -113,7 +133,6 @@ anim_player:add_imgui(function()
         end
     end
 end)
-
 anim_player:add_imgui(function()
     info = filteredAnims[anim_index+1]
     local coords = ENTITY.GET_ENTITY_COORDS(ped, false)
@@ -345,7 +364,6 @@ anim_player:add_imgui(function()
         ImGui.Text("TIP: You can also stop animations by pressing\n'Delete' on keyboard or 'X' on controller.")
         ImGui.EndTooltip()
     end
-
     event.register_handler(menu_event.ScriptsReloaded, function()
         PED.RESET_PED_MOVEMENT_CLIPSET(ped, 0.0)
         PED.SET_PED_RAGDOLL_ON_COLLISION(ped, false)
@@ -391,7 +409,6 @@ anim_player:add_imgui(function()
         end
     end)
 end)
-
 anim_player:add_imgui(function()
     ImGui.Separator()
     ImGui.Text("Fun Features:")
@@ -494,7 +511,6 @@ anim_player:add_imgui(function()
         PED.RESET_PED_MOVEMENT_CLIPSET(ped, 0.0)
     end
 end)
-
 script.register_looped("Ragdoll Loop", function(script)
     script:yield()
     if clumsy then
@@ -507,11 +523,10 @@ script.register_looped("Ragdoll Loop", function(script)
     elseif rod then
         clumsy = false
         if PAD.IS_CONTROL_PRESSED(0, 252) then
-            PED.SET_PED_TO_RAGDOLL(ped, 1000, 1000, 0, true, true, false)
+            PED.SET_PED_TO_RAGDOLL(ped, 500, 500, 1, true, true, false)
         end
     end
 end)
-
 script.register_looped("animation hotkey", function(script)
     script:yield()
     if is_playing_anim then
@@ -528,7 +543,6 @@ script.register_looped("animation hotkey", function(script)
         end
     end
 end)
-
 local ped_scenarios = {
     {scenario = "WORLD_HUMAN_STAND_MOBILE", name = "Browse Phone"},
     {scenario = "WORLD_HUMAN_CHEERING", name = "Clap"},
@@ -620,17 +634,12 @@ local ped_scenarios = {
     {scenario = "WORLD_HUMAN_SIT_UPS", name = "Workout: Sit-ups"},
     {scenario = "WORLD_HUMAN_YOGA", name = "Workout: Yoga"},
 }
-
 local scenario_index = 0
-
-local searchQuery = ""
-
+local search_query = ""
 is_playing_scenario = false
-
 scenario_player:add_text("Search:")
-
 scenario_player:add_imgui(function()
-    searchQuery, used = ImGui.InputText("", searchQuery, 32)
+    search_query, used = ImGui.InputText("", search_query, 32)
     if ImGui.IsItemActive() then
 		is_typing = true
 	else
@@ -638,17 +647,15 @@ scenario_player:add_imgui(function()
 	end
     ImGui.PushItemWidth(250)
 end)
-
 local filteredScenarios = {}
 local function updatefilteredScenarios()
     filteredScenarios = {}
     for _, scene in ipairs(ped_scenarios) do
-        if string.find(string.lower(scene.name), string.lower(searchQuery)) then
+        if string.find(string.lower(scene.name), string.lower(search_query)) then
             table.insert(filteredScenarios, scene)
         end
     end
 end
-
 local function displayFilteredList()
     updatefilteredScenarios()
     local scenarioNames = {}
@@ -657,11 +664,8 @@ local function displayFilteredList()
     end
     scenario_index, used = ImGui.ListBox(" ", scenario_index, scenarioNames, #filteredScenarios)
 end
-
 scenario_player:add_imgui(displayFilteredList)
-
 scenario_player:add_separator()
-
 scenario_player:add_imgui(function()
     if ImGui.Button("   Play    ") then
         local data = filteredScenarios[scenario_index+1]
@@ -669,7 +673,6 @@ scenario_player:add_imgui(function()
         local heading = ENTITY.GET_ENTITY_HEADING(ped)
         local forwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
         local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
-
         if data.name == "Cook On BBQ" then
             script.run_in_fiber(function()
                 while not STREAMING.HAS_MODEL_LOADED(286252949) do
@@ -683,7 +686,6 @@ scenario_player:add_imgui(function()
 			    TASK.TASK_START_SCENARIO_IN_PLACE(ped, data.scenario, -1, true)
                 is_playing_scenario = true
             end)
-
         else
             script.run_in_fiber(function(script)
 		        TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
@@ -692,25 +694,7 @@ scenario_player:add_imgui(function()
             end)
         end
     end
-
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-    ImGui.Spacing()
-    ImGui.SameLine()
-
+    ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
     if ImGui.Button("   Stop    ") then
         script.run_in_fiber(function()
             ENTITY.DELETE_ENTITY(bbq)
@@ -724,7 +708,6 @@ scenario_player:add_imgui(function()
         ImGui.Text("TIP: You can also stop scenarios by pressing\n'Delete' on keyboard or 'X' on controller.")
         ImGui.EndTooltip()
     end
-
     event.register_handler(menu_event.ScriptsReloaded, function()
         if is_playing_scenario then
             ENTITY.DELETE_ENTITY(bbq)
@@ -732,7 +715,6 @@ scenario_player:add_imgui(function()
             is_playing_scenario = false
         end
     end)
-
     event.register_handler(menu_event.MenuUnloaded, function()
         if is_playing_scenario then
             ENTITY.DELETE_ENTITY(bbq)
@@ -741,7 +723,6 @@ scenario_player:add_imgui(function()
         end
     end)
 end)
-
 script.register_looped("scenario hotkey", function(script)
     script:yield()
     if is_playing_scenario then
