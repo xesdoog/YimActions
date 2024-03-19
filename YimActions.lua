@@ -5,10 +5,6 @@ anim_player = YimActions:add_tab("SAMURAI's Animations")
 scenario_player = YimActions:add_tab("SAMURAI's Scenarios")
 local animlist = require ("animdata")
 local anim_index = 0
-local flag_loop = 0
-local flag_freeze = 0
-local flag_upperbody = 0
-local flag_control = 0
 script.register_looped("playerID", function(playerID)
     if NETWORK.NETWORK_IS_SESSION_ACTIVE() then
         is_online = true
@@ -24,28 +20,28 @@ script.register_looped("playerID", function(playerID)
     end
     playerID:yield()
 end)
--- anim_player:add_imgui(function()
---     if ImGui.Button("Debug") then
---         local playerModel = ENTITY.GET_ENTITY_MODEL(ped)
---         local playerName = ""
---         if not is_online then
---             if playerModel == 2602752943 then
---                 playerName = "Franklin"
---             elseif playerModel == 225514697 then
---                 playerName = "Michael"
---             elseif playerModel == 2608926626 then
---                 playerName = "Trevor"
---             else
---                 playerName = "Invalid player model!"
---             end
---         elseif stats.get_int("MPPLY_LAST_MP_CHAR") == 0 then
---             playerName = "Online character 1"
---         else
---             playerName = "Online character 2"
---         end
---         gui.show_message("Debug","Online: "..tostring(is_online).."\nPlayer ID: "..tostring(ped).."\nPlayer Name: "..playerName)
---     end
--- end)
+anim_player:add_imgui(function()
+    if ImGui.Button("Debug") then
+        local playerModel = ENTITY.GET_ENTITY_MODEL(ped)
+        local playerName = ""
+        if not is_online then
+            if playerModel == 2602752943 then
+                playerName = "Franklin"
+            elseif playerModel == 225514697 then
+                playerName = "Michael"
+            elseif playerModel == 2608926626 then
+                playerName = "Trevor"
+            else
+                playerName = "Invalid player model!"
+            end
+        elseif stats.get_int("MPPLY_LAST_MP_CHAR") == 0 then
+            playerName = "Online character 1"
+        else
+            playerName = "Online character 2"
+        end
+        gui.show_message("Debug","Online: "..tostring(is_online).."\nPlayer ID: "..tostring(ped).."\nPlayer Name: "..playerName)
+    end
+end)
 is_playing_anim = false
 anim_player:add_text("Search:")
 local searchQuery = ""
@@ -76,7 +72,7 @@ local function updatefilteredAnims()
         return a.name < b.name
     end)
 end
-local function displayFilteredList()
+local function displayFilteredAnims()
     updatefilteredAnims()
     local animNames = {}
     for _, anim in ipairs(filteredAnims) do
@@ -84,7 +80,7 @@ local function displayFilteredList()
     end
     anim_index, used = ImGui.ListBox(" ", anim_index, animNames, #filteredAnims)
 end
-anim_player:add_imgui(displayFilteredList)
+anim_player:add_imgui(displayFilteredAnims)
 anim_player:add_separator()
 anim_player:add_imgui(function()
     manualFlags, used = ImGui.Checkbox("Edit Animation Flags", manualFlags, true)
@@ -656,7 +652,7 @@ local function updatefilteredScenarios()
         end
     end
 end
-local function displayFilteredList()
+local function displayFilteredScenarios()
     updatefilteredScenarios()
     local scenarioNames = {}
     for _, scene in ipairs(filteredScenarios) do
@@ -664,7 +660,7 @@ local function displayFilteredList()
     end
     scenario_index, used = ImGui.ListBox(" ", scenario_index, scenarioNames, #filteredScenarios)
 end
-scenario_player:add_imgui(displayFilteredList)
+scenario_player:add_imgui(displayFilteredScenarios)
 scenario_player:add_separator()
 scenario_player:add_imgui(function()
     if ImGui.Button("   Play    ") then
@@ -701,6 +697,7 @@ scenario_player:add_imgui(function()
             ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(bbq)
 			TASK.CLEAR_PED_TASKS(ped)
             is_playing_scenario = false
+            gui.show_message("Stopping scenario...", "")
 		end)
     end
     if ImGui.IsItemHovered() then
@@ -730,6 +727,7 @@ script.register_looped("scenario hotkey", function(script)
             ENTITY.DELETE_ENTITY(bbq)
             TASK.CLEAR_PED_TASKS(ped)
             is_playing_scenario = false
+            gui.show_message("Stopping scenario...", "")
         end
     end
 end)
