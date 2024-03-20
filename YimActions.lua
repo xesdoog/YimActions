@@ -20,28 +20,6 @@ script.register_looped("playerID", function(playerID)
     end
     playerID:yield()
 end)
-anim_player:add_imgui(function()
-    if ImGui.Button("Debug") then
-        local playerModel = ENTITY.GET_ENTITY_MODEL(ped)
-        local playerName = ""
-        if not is_online then
-            if playerModel == 2602752943 then
-                playerName = "Franklin"
-            elseif playerModel == 225514697 then
-                playerName = "Michael"
-            elseif playerModel == 2608926626 then
-                playerName = "Trevor"
-            else
-                playerName = "Invalid player model!"
-            end
-        elseif stats.get_int("MPPLY_LAST_MP_CHAR") == 0 then
-            playerName = "Online character 1"
-        else
-            playerName = "Online character 2"
-        end
-        gui.show_message("Debug","Online: "..tostring(is_online).."\nPlayer ID: "..tostring(ped).."\nPlayer Name: "..playerName)
-    end
-end)
 is_playing_anim = false
 anim_player:add_text("Search:")
 local searchQuery = ""
