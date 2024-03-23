@@ -655,7 +655,7 @@ YimActions:add_imgui(function()
                         STREAMING.REQUEST_ANIM_DICT(data.dict)
                         coroutine.yield()
                     end
-                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, info.flag, 1.0, false, false, false)
                     is_playing_anim = true
                 end)
             elseif data.type == 2 then
@@ -669,7 +669,7 @@ YimActions:add_imgui(function()
                         STREAMING.REQUEST_ANIM_DICT(data.dict)
                         coroutine.yield()
                     end
-                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, flag, 0, false, false, false)
+                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, info.flag, 0, false, false, false)
                     is_playing_anim = true
                     type2:sleep(data.ptfxdelay)
                     GRAPHICS.USE_PARTICLE_FX_ASSET(data.ptfxdict)
@@ -690,7 +690,7 @@ YimActions:add_imgui(function()
                         STREAMING.REQUEST_ANIM_DICT(data.dict)
                         coroutine.yield()
                     end
-                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, info.flag, 1.0, false, false, false)
                     is_playing_anim = true
                 end)
             elseif data.type == 4 then
@@ -704,7 +704,7 @@ YimActions:add_imgui(function()
                         STREAMING.REQUEST_ANIM_DICT(data.dict)
                         coroutine.yield()
                     end
-                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, info.flag, 1.0, false, false, false)
                     prop1 = OBJECT.CREATE_OBJECT(data.prop1, 0.0, 0.0, 0.0, true, true, false)
                     table.insert(spawned_props, prop1)
                     ENTITY.SET_ENTITY_COORDS(prop1, bonecoords.x + data.posx, bonecoords.y + data.posy, bonecoords.z + data.posz)
@@ -735,7 +735,7 @@ YimActions:add_imgui(function()
                         STREAMING.REQUEST_ANIM_DICT(data.dict)
                         coroutine.yield()
                     end
-                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, flag, 0.0, false, false, false)
+                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, info.flag, 0.0, false, false, false)
                     is_playing_anim = true
                 end)
             elseif data.type == 6 then
@@ -759,7 +759,7 @@ YimActions:add_imgui(function()
                             STREAMING.REQUEST_ANIM_DICT(data.dict)
                             coroutine.yield()
                         end
-                        TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                        TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, info.flag, 1.0, false, false, false)
                         is_playing_anim = true
                     end)
             else
@@ -769,7 +769,7 @@ YimActions:add_imgui(function()
                         STREAMING.REQUEST_ANIM_DICT(data.dict)
                         coroutine.yield()
                     end
-                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, flag, 0.0, false, false, false)
+                    TASK.TASK_PLAY_ANIM(ped, data.dict, data.anim, 4.0, -4.0, -1, info.flag, 0.0, false, false, false)
                     is_playing_anim = true
                 end)
             end
