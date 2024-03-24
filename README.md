@@ -23,4 +23,4 @@ Taught me how to actually write a search function. Thank you! ❤️
 Taught me how not to crash the game everytime I pressed a button 😭
 
 [Harmless](https://github.com/Harmless05) 
-No relation to this script. He's just a nice person and has cat profile picture 😸
+No relation to this script. He's just a nice person and has a cat profile picture 😸
