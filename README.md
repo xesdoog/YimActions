@@ -17,10 +17,12 @@
 ## Credits:
 
 [ShinyWasabi](https://github.com/ShinyWasabi) 
-Taught me how to actually write a search function. Thank you! ❤️
+Taught me how to write a proper search function that disables game input while typing. Thank you! ❤️
 
 [Lonelybud](https://github.com/lonelybud) 
-Taught me how not to crash the game everytime I pressed a button 😭
+Taught me how not to crash the game everytime I pressed a button 😭 I had no idea what the fiber pool was...
+
+[Deadlineem](https://github.com/deadlineem) Gave useful feedback on scenarios and also was there whenever I asked for insight in UC forum.
 
 [Harmless](https://github.com/Harmless05) 
 No relation to this script. He's just a nice person and has a cat profile picture 😸
