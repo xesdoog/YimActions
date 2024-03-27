@@ -558,6 +558,41 @@ YimActions:add_imgui(function()
             else
                 flag = info.flag
             end
+        helpmarker("Allows you to customize how the animation plays.\nExample: if an animation is set to loop but you want it to freeze, activate this then choose your desired settings.")
+        ImGui.SameLine()
+        disableProps, used = ImGui.Checkbox("Disable Props", disableProps, true)
+        helpmarker("Choose whether to play animations with props or not. Check or Un-check this before playing the animation.")
+        if manualFlags then
+            ImGui.Separator()
+            controllable, used = ImGui.Checkbox("Allow Control", controllable, true)
+            helpmarker("Allows you to keep control of your character and/or vehicle. If paired with 'Upper Body Only', you can play animations and walk/run/drive around.")
+            ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+            looped, used = ImGui.Checkbox("Loop", looped, true)
+            helpmarker("Plays the animation forever until you manually stop it.")
+            upperbody, used = ImGui.Checkbox("Upper Body Only", upperbody, true)
+            helpmarker("Only plays the animation on you character's upperbody (from the waist up).")
+            ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+            freeze, used = ImGui.Checkbox("Freeze", freeze, true)
+            helpmarker("Freezes the animation at the very last frame. Useful for ragdoll/sleeping/dead animations.")
+        end
+        info = filteredAnims[anim_index + 1]
+        function cleanup()
+            script.run_in_fiber(function()
+                TASK.CLEAR_PED_TASKS(ped)
+                ENTITY.DELETE_ENTITY(prop1)
+                ENTITY.DELETE_ENTITY(prop2)
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
+                STREAMING.REMOVE_ANIM_DICT(info.dict)
+                STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
+            end)
+        end
+        if ImGui.Button("   Play    ") then
+            local coords = ENTITY.GET_ENTITY_COORDS(ped, false)
+            local heading = ENTITY.GET_ENTITY_HEADING(ped)
+            local forwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
+            local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
+            local boneIndex = PED.GET_PED_BONE_INDEX(ped, info.boneID)
+            local bonecoords = PED.GET_PED_BONE_COORDS(ped, info.boneID)
             if manualFlags then
                 setmanualflag()
             else
@@ -854,7 +889,6 @@ YimActions:add_imgui(function()
                 if ENTITY.DOES_ENTITY_EXIST(bbq) then
                     ENTITY.DELETE_ENTITY(bbq)
                 end
-            end
         end)
         event.register_handler(menu_event.MenuUnloaded, function()
             if is_playing_scenario then
