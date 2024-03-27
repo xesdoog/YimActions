@@ -727,7 +727,7 @@ YimActions:add_imgui(function()
             end
         end
         ImGui.SameLine()
-        if ImGui.Button("   Stop    ") then
+        if ImGui.Button("   Stop   ") then
             cleanupNPC()
             script.run_in_fiber(function()
             TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, ped, 1.0, 1.0, 0, 10, -1, 1, true)
