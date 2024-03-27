@@ -301,9 +301,27 @@ ped_scenarios = {
 }
 
 npcList = {
-    {group = "PED_TYPE_CIVMALE", hash = 184652379, name = "Hooker1"},
-    {group = "PED_TYPE_CIVMALE", hash = 0x5442C66B, name = "Cult Guy"},
-    {group = "PED_TYPE_CIVMALE", hash = 184652379, name = "Hooker3"},
+    {group = "PED_TYPE_CIVFEMALE", hash = 0x6E0FB794, name = "Hooker"},
+    {group = "PED_TYPE_CIVFEMALE", hash = 0x52580019, name = "Hooker 02"},
+    {group = "PED_TYPE_CIVFEMALE", hash = 0x780C01BD, name = "VU Bartender"},
+    {group = "PED_TYPE_CIVMALE", hash = 0x5442C66B, name = "Cult Fat Man"},
+    {group = "PED_TYPE_CIVMALE", hash = 0x55446010, name = "Cult Old Man"},
+    {group = "PED_TYPE_CIVMALE", hash = 0xCF0C7037, name = "DRE"},
+    {group = "PED_TYPE_CIVMALE", hash = 0x69287899, name = "Vincent"},
+    {group = "PED_TYPE_CIVMALE", hash = 0x65B93076, name = "Lamar"},
+    {group = "PED_TYPE_CIVMALE", hash = 0xCE2CB751, name = "JEEBUS"},
+    {group = "PED_TYPE_CIVMALE", hash = 0xA17EC96C, name = "Yusuf Amir"},
+    {group = "PED_TYPE_CIVMALE", hash = 0x8CE6A476, name = "Yeti"},
+    {group = "PED_TYPE_CIVFEMALE", hash = 0xB5CF80E4, name = "Cult Fat Woman"},
+    {group = "PED_TYPE_CIVFEMALE", hash = 0x51D861F2, name = "Luchadora"},
+    {group = "PED_TYPE_ANIMAL", hash = 0xCE5FF074, name = "Boar"},
+    {group = "PED_TYPE_ANIMAL", hash = 0x4E8F95A2, name = "Husky"},
+    {group = "PED_TYPE_ANIMAL", hash = 0x14EC17EA, name = "Chop"},
+    {group = "PED_TYPE_ANIMAL", hash = 0x7E0C64AA, name = "Chimp"},
+    {group = "PED_TYPE_ARMY", hash = 0xB3F3EE34, name = "Mercenary 01"},
+    {group = "PED_TYPE_ARMY", hash = 0x5076A73B, name = "Mercenary 02"},
+    {group = "PED_TYPE_COP", hash = 0x15F8700D, name = "Police (female)"},
+    {group = "PED_TYPE_COP", hash = 0x5E3DA4A4, name = "Police (male)"},
 }
 
 function Button(text, color, hovercolor, activecolor)

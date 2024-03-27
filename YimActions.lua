@@ -67,6 +67,19 @@ script.register_looped("animation hotkey", function(script)
         end
     end
 end)
+script.register_looped("follow ped", function(follow)
+    follow:yield()
+    if PED.IS_PED_IN_ANY_VEHICLE(ped, false) and not PED.IS_PED_SITTING_IN_ANY_VEHICLE(npc) then
+        veh = PED.GET_VEHICLE_PED_IS_USING(ped)
+        PED.SET_PED_INTO_VEHICLE(npc, veh, 0)
+        follow:yield()
+    end
+    if PED.IS_PED_SITTING_IN_ANY_VEHICLE(npc) and not PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
+        TASK.CLEAR_PED_TASKS_IMMEDIATELY(npc)
+        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, ped, 1.0, 1.0, 0, 10, -1, 1, true)
+        follow:yield()
+    end
+end)
 script.register_looped("disable game input", function()
         if is_typing then
             PAD.DISABLE_ALL_CONTROL_ACTIONS(0)
@@ -106,7 +119,7 @@ local function displayNpcs()
     for _, npc in ipairs(filteredNpcs) do
         table.insert(npcNames, npc.name)
     end
-    npc_index, used = ImGui.Combo("##npcList", npc_index, npcNames, #filteredNpcs, ImGuiComboFlags.HeightSmall)
+    npc_index, used = ImGui.Combo("##npcList", npc_index, npcNames, #filteredNpcs)
 end
 local function setmanualflag()
     if looped then
@@ -368,29 +381,32 @@ YimActions:add_imgui(function()
             elseif info.type == 7 then
                 cleanup()
                 script.run_in_fiber(function()
-                    while not STREAMING.HAS_MODEL_LOADED(info.pedHash) do
-                        STREAMING.REQUEST_MODEL(info.pedHash)
-                        coroutine.yield()
+                    if not disableProps then
+                        while not STREAMING.HAS_MODEL_LOADED(info.pedHash) do
+                            STREAMING.REQUEST_MODEL(info.pedHash)
+                            coroutine.yield()
+                        end
+                        sexPed = PED.CREATE_PED(info.pedType, info.pedHash, 0.0, 0.0, 0.0, 0.0, true, false)
+                        ENTITY.ATTACH_ENTITY_TO_ENTITY(sexPed, ped, boneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, true, false, true, 1, true, 1)
+                        ENTITY.SET_ENTITY_INVINCIBLE(sexPed, true)
+                        table.insert(spawned_entities, sexPed)
+                        npcNetID = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(sexPed)
+                        RequestControl(sexPed, npcNetID, 250)
+                        entToNet(sexPed, npcNetID)
+                        while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict2) do
+                            STREAMING.REQUEST_ANIM_DICT(info.dict2)
+                            coroutine.yield()
+                        end
+                        TASK.TASK_PLAY_ANIM(sexPed, info.dict2, info.anim2, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                        PED.SET_PED_CONFIG_FLAG(sexPed, 179, true)
+                        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(sexPed, true)
                     end
-                    sexPed = PED.CREATE_PED(info.pedType, info.pedHash, 0.0, 0.0, 0.0, 0.0, true, false)
-                    ENTITY.ATTACH_ENTITY_TO_ENTITY(sexPed, ped, boneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, true, false, true, 1, true, 1)
-                    table.insert(spawned_entities, sexPed)
-                    npcNetID = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(sexPed)
-                    RequestControl(sexPed, npcNetID, 250)
-                    entToNet(sexPed, npcNetID)
                     while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                         STREAMING.REQUEST_ANIM_DICT(info.dict)
                         coroutine.yield()
                     end
-                    while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict2) do
-                        STREAMING.REQUEST_ANIM_DICT(info.dict2)
-                        coroutine.yield()
-                    end
                     TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
                     PED.SET_PED_CONFIG_FLAG(ped, 179, true)
-                    TASK.TASK_PLAY_ANIM(sexPed, info.dict2, info.anim2, 4.0, -4.0, -1, flag, 1.0, false, false, false)
-                    PED.SET_PED_CONFIG_FLAG(sexPed, 179, true)
-                    PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(sexPed, true)
                     TASK.TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(sexPed, true)
                     is_playing_anim = true
                 end)
@@ -472,7 +488,9 @@ YimActions:add_imgui(function()
         switch, isChanged = ImGui.RadioButton("Heavy", switch, 5)
         if isChanged then setballistic() end
         ImGui.Separator()
-        coloredText("Play Animations On NPCs [WIP]", {247, 185, 104, 0.78})
+        ImGui.Text("Play Animations On NPCs:")
+        ImGui.SameLine()
+        coloredText("[Work In Progress]", {247, 185, 104, 0.78})
         ImGui.PushItemWidth(200)
         displayNpcs()
         ImGui.PopItemWidth()
@@ -504,6 +522,7 @@ YimActions:add_imgui(function()
                 npc = PED.CREATE_PED(npcData.group, npcData.hash, 0.0, 0.0, 0.0, 0.0, true, false)
                 ENTITY.SET_ENTITY_COORDS_NO_OFFSET(npc, pedCoords.x + pedForwardX * 1.4, pedCoords.y + pedForwardY * 1.4, pedCoords.z, true, false, false)
                 ENTITY.SET_ENTITY_HEADING(npc, pedHeading - 180)
+                ENTITY.SET_ENTITY_INVINCIBLE(npc, true)
                 npcNetID2 = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(npc)
                 RequestControl(npc, npcNetID2, 250)
                 entToNet(npc, npcNetID2)
@@ -668,16 +687,19 @@ YimActions:add_imgui(function()
             elseif info.type == 7 then
                 cleanupNPC()
                 script.run_in_fiber(function()
-                    while not STREAMING.HAS_MODEL_LOADED(info.pedHash) do
-                        STREAMING.REQUEST_MODEL(info.pedHash)
-                        coroutine.yield()
+                    if not disableProps then
+                        while not STREAMING.HAS_MODEL_LOADED(info.pedHash) do
+                            STREAMING.REQUEST_MODEL(info.pedHash)
+                            coroutine.yield()
+                        end
+                        sexPed2 = PED.CREATE_PED(info.pedType, info.pedHash, 0.0, 0.0, 0.0, 0.0, true, false)
+                        ENTITY.ATTACH_ENTITY_TO_ENTITY(sexPed2, npc, npcBoneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, true, false, true, 1, true, 1)
+                        ENTITY.SET_ENTITY_INVINCIBLE(sexPed2, true)
+                        table.insert(spawned_entities, sexPed2)
+                        npcNetID = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(sexPed2)
+                        RequestControl(sexPed2, npcNetID, 250)
+                        entToNet(sexPed2, npcNetID)
                     end
-                    sexPed2 = PED.CREATE_PED(info.pedType, info.pedHash, 0.0, 0.0, 0.0, 0.0, true, false)
-                    ENTITY.ATTACH_ENTITY_TO_ENTITY(sexPed2, npc, npcBoneIndex, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, true, false, true, 1, true, 1)
-                    table.insert(spawned_entities, sexPed2)
-                    npcNetID = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(sexPed2)
-                    RequestControl(sexPed2, npcNetID, 250)
-                    entToNet(sexPed2, npcNetID)
                     while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                         STREAMING.REQUEST_ANIM_DICT(info.dict)
                         coroutine.yield()
@@ -705,11 +727,10 @@ YimActions:add_imgui(function()
             end
         end
         ImGui.SameLine()
-        if ImGui.Button("   Stop   ") then
-            log.info("Pressed")
+        if ImGui.Button("   Stop    ") then
             cleanupNPC()
             script.run_in_fiber(function()
-            TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, ped, 1.0, 1.0, 0, 10, -1, 1, true)    
+            TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, ped, 1.0, 1.0, 0, 10, -1, 1, true)
             end)
         end
         ImGui.PopItemWidth()
