@@ -19,8 +19,13 @@ local controllable = false
 local looped = false
 local upperbody = false
 local freeze = false
+local disableTooltips = false
+local phoneAnim = false
+local searchBar = true
 is_playing_anim = false
 is_playing_scenario = false
+local x = 0
+local counter = 0
 script.register_looped("playerID", function(playerID)
     if NETWORK.NETWORK_IS_SESSION_ACTIVE() then
         is_online = true
@@ -197,13 +202,15 @@ local function setballistic()
     end)
 end
 YimActions:add_imgui(function()
-    ImGui.Text("Search:")
-    ImGui.PushItemWidth(350)
-    searchQuery, used = ImGui.InputText("", searchQuery, 32)
-    if ImGui.IsItemActive() then
-        is_typing = true
-    else
-        is_typing = false
+    if searchBar then
+        ImGui.Text("Search:")
+        ImGui.PushItemWidth(270)
+        searchQuery, used = ImGui.InputText("##searchBar", searchQuery, 32)
+        if ImGui.IsItemActive() then
+            is_typing = true
+        else
+            is_typing = false
+        end
     end
     ImGui.BeginTabBar("Samurai's YimActions", ImGuiTabBarFlags.None)
     if ImGui.BeginTabItem("Animations") then
@@ -1033,6 +1040,65 @@ YimActions:add_imgui(function()
         end)
         ImGui.EndTabItem()
     end
+    local function progressBar()
+        x = x + 0.008
+        if x > 1 then
+            x = 1
+            progessMessage = "Congrats! You Are Not Retarded."
+        else
+            progessMessage = "Testing..."
+        end
+    end
+    local function displayProgressBar()
+        ImGui.Text(progessMessage)
+        progressBar()
+        ImGui.ProgressBar(x, 250, 25)
+    end
+    if ImGui.BeginTabItem("Settings") then
+        searchBar = false
+        disableTooltips, used = ImGui.Checkbox("Disable Tooltips", disableTooltips, true)
+        widgetToolTip(false, "Well, it disables this thing.")
+        ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+        if Button("Dummy Button", {142, 0, 0, 1}, {142, 0, 0, 0.7}, {142, 0, 0, 0.5}) then
+            ImGui.OpenPopup("##Progress Bar")
+        end
+        ImGui.SetNextWindowBgAlpha(0)
+        if ImGui.BeginPopupModal("##Progress Bar", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.AlwaysAutoResize) then
+                displayProgressBar()
+                if x == 1 then
+                    counter = counter + 1
+                    if counter > 200 then
+                        ImGui.CloseCurrentPopup()
+                        counter = 0
+                        x = 0
+                    else return
+                    end
+                end
+            ImGui.EndPopup()
+        end
+        phoneAnim, used = ImGui.Checkbox("Enable Phone Animation", phoneAnim, true)
+        helpmarker(false, "Restores the disabled phone animations from Single Player.")
+        ImGui.SameLine()
+        if ImGui.SmallButton("Dummy2") then
+            gui.show_message("Bruh!", "Stop pressing dummy buttons.")
+        end
+        if phoneAnim then
+            if is_online then
+                if not ENTITY.IS_ENTITY_DEAD(ped) then
+                    PED.SET_PED_CONFIG_FLAG(ped, 242, false)
+                    PED.SET_PED_CONFIG_FLAG(ped, 243, false)
+                    PED.SET_PED_CONFIG_FLAG(ped, 244, false)
+                else
+                    PED.SET_PED_CONFIG_FLAG(ped, 242, true)
+                    PED.SET_PED_CONFIG_FLAG(ped, 243, true)
+                    PED.SET_PED_CONFIG_FLAG(ped, 244, true)
+                end
+            end
+        end
+        ImGui.EndTabItem()
+    else
+        searchBar = true
+    end
 end)
 script.register_looped("scenario hotkey", function(hotkey)
     hotkey:yield()
@@ -1053,3 +1119,39 @@ script.register_looped("scenario hotkey", function(hotkey)
         end
     end
 end)
+
+function helpmarker(colorFlag, text, color)
+    if not disableTooltips then
+        ImGui.SameLine()
+        ImGui.TextDisabled("(?)")
+        if ImGui.IsItemHovered() then
+            ImGui.SetNextWindowBgAlpha(0.75)
+            ImGui.BeginTooltip()
+            if colorFlag == true then
+                coloredText(text, color)
+            else
+                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
+                ImGui.TextWrapped(text)
+                ImGui.PopTextWrapPos()
+            end
+            ImGui.EndTooltip()
+        end
+    end
+end
+
+function widgetToolTip(colorFlag, text, color)
+    if not disableTooltips then
+        if ImGui.IsItemHovered() then
+            ImGui.SetNextWindowBgAlpha(0.75)
+            ImGui.BeginTooltip()
+            if colorFlag == true then
+                coloredText(text, color)
+            else
+                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
+                ImGui.TextWrapped(text)
+                ImGui.PopTextWrapPos()
+            end
+            ImGui.EndTooltip()
+        end
+    end
+end
