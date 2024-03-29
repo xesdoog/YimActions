@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 YimActions = gui.get_tab("Samurai's YimActions")
 require ("animdata")
+json = require("json")
 local anim_index = 0
 local scenario_index = 0
 local npc_index = 0
@@ -11,21 +12,22 @@ local spawned_entities = {}
 local spawned_npcs = {}
 local searchQuery = ""
 local is_typing = false
-local clumsy = false
-local rod = false
-local manualFlags = false
-local disableProps = false
 local controllable = false
 local looped = false
 local upperbody = false
 local freeze = false
-local disableTooltips = false
-local phoneAnim = false
 local searchBar = true
-is_playing_anim = false
-is_playing_scenario = false
 local x = 0
 local counter = 0
+is_playing_anim = false
+is_playing_scenario = false
+default_config = {disableTooltips = false, phoneAnim = false, clumsy = false, rod = false, disableProps = false}
+local disableTooltips = readFromConfig("disableTooltips")
+local phoneAnim = readFromConfig("phoneAnim")
+local clumsy = readFromConfig("clumsy")
+local rod = readFromConfig("rod")
+local manualFlags = false
+local disableProps = readFromConfig("disableProps")
 script.register_looped("playerID", function(playerID)
     if NETWORK.NETWORK_IS_SESSION_ACTIVE() then
         is_online = true
@@ -201,6 +203,13 @@ local function setballistic()
         PED.SET_PED_MOVEMENT_CLIPSET(ped, "anim_group_move_ballistic", 1)
     end)
 end
+function resetCheckBoxes()
+    disableTooltips = false 
+    phoneAnim = false
+    clumsy = false
+    rod = false
+    disableProps = false
+end
 YimActions:add_imgui(function()
     if searchBar then
         ImGui.Text("Search:")
@@ -221,6 +230,9 @@ YimActions:add_imgui(function()
         helpmarker(false, "Allows you to customize how the animation plays.\nExample: if an animation is set to loop but you want it to freeze, activate this then choose your desired settings.")
         ImGui.SameLine()
         disableProps, used = ImGui.Checkbox("Disable Props", disableProps, true)
+        if used then
+            saveToConfig("disableProps", disableProps)
+        end
         helpmarker(false, "Choose whether to play animations with props or not. Check or Un-check this before playing the animation.")
         if manualFlags then
             ImGui.Separator()
@@ -483,11 +495,19 @@ YimActions:add_imgui(function()
         ImGui.Text("Ragdoll Options:")
         ImGui.Spacing()
         clumsy, used = ImGui.Checkbox("Clumsy", clumsy, true)
-        if clumsy then rod = false end
+        if clumsy then
+            rod = false
+            saveToConfig("clumsy", clumsy)
+            saveToConfig("rod", rod)
+        end
         helpmarker(false, "Makes You Ragdoll When You Collide With Any Object.\n(Doesn't work with Ragdoll On Demand)")
         ImGui.SameLine()
         rod, used = ImGui.Checkbox("Ragdoll On Demand", rod, true)
-        if rod then clumsy = false end
+        if rod then
+            clumsy = false
+            saveToConfig("rod", rod)
+            saveToConfig("clumsy", clumsy)
+        end
         helpmarker(false, "Press [X] On Keyboard or [LT] On Controller To Instantly Ragdoll. The Longer You Hold The Button, The Longer You Stay On The Ground.\n(Doesn't work with Clumsy)")
         ImGui.Spacing()
         ImGui.Text("Movement Options:")
@@ -580,11 +600,6 @@ YimActions:add_imgui(function()
                 local npcForwardY = ENTITY.GET_ENTITY_FORWARD_Y(npc)
                 local npcBoneIndex = PED.GET_PED_BONE_INDEX(npc, info.boneID)
                 local npcBboneCoords = PED.GET_PED_BONE_COORDS(npc, info.boneID)
-                if manualFlags then
-                    setmanualflag()
-                else
-                    flag = info.flag
-                end
                 if manualFlags then
                     setmanualflag()
                 else
@@ -1041,12 +1056,12 @@ YimActions:add_imgui(function()
         ImGui.EndTabItem()
     end
     local function progressBar()
-        x = x + 0.008
+        x = x + 0.01
         if x > 1 then
             x = 1
-            progessMessage = "Congrats! You Are Not Retarded."
+            progessMessage = "Settings Successfully Reset."
         else
-            progessMessage = "Testing..."
+            progessMessage = "Please Wait..."
         end
     end
     local function displayProgressBar()
@@ -1057,17 +1072,22 @@ YimActions:add_imgui(function()
     if ImGui.BeginTabItem("Settings") then
         searchBar = false
         disableTooltips, used = ImGui.Checkbox("Disable Tooltips", disableTooltips, true)
+        if used then
+        saveToConfig("disableTooltips", disableTooltips)
+        end
         widgetToolTip(false, "Well, it disables this thing.")
         ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
-        if Button("Dummy Button", {142, 0, 0, 1}, {142, 0, 0, 0.7}, {142, 0, 0, 0.5}) then
+        if Button("Reset Settings", {142, 0, 0, 1}, {142, 0, 0, 0.7}, {142, 0, 0, 0.5}) then
             ImGui.OpenPopup("##Progress Bar")
         end
         ImGui.SetNextWindowBgAlpha(0)
         if ImGui.BeginPopupModal("##Progress Bar", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.AlwaysAutoResize) then
                 displayProgressBar()
+                resetConfig(default_config)
+                resetCheckBoxes()
                 if x == 1 then
                     counter = counter + 1
-                    if counter > 200 then
+                    if counter > 150 then
                         ImGui.CloseCurrentPopup()
                         counter = 0
                         x = 0
@@ -1076,10 +1096,13 @@ YimActions:add_imgui(function()
                 end
             ImGui.EndPopup()
         end
-        phoneAnim, used = ImGui.Checkbox("Enable Phone Animation", phoneAnim, true)
+        phoneAnim, used = ImGui.Checkbox("Enable Phone Animations", phoneAnim, true)
+        if used then
+            saveToConfig("phoneAnim", phoneAnim)
+        end
         helpmarker(false, "Restores the disabled phone animations from Single Player.")
         ImGui.SameLine()
-        if ImGui.SmallButton("Dummy2") then
+        if ImGui.SmallButton("Dummy") then
             gui.show_message("Bruh!", "Stop pressing dummy buttons.")
         end
         if phoneAnim then

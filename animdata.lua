@@ -403,3 +403,80 @@ function entToNet(entity, netID)
         end
     end)
 end
+
+function writeToFile(filename, data)
+    local file, _ = io.open(filename, "w")
+    if file == nil then
+      log.warning("Failed to write to " .. filename)
+      gui.show_error("YimActions", "Failed to write to " .. filename)
+      return false
+    end
+    file:write(json.encode(data))
+    file:close()
+    return true
+end
+  
+function readFromFile(filename)
+    local file, _ = io.open(filename, "r")
+    if file == nil then
+      return nil
+    end
+    local content = file:read("*all")
+    file:close()
+    return json.decode(content)
+end
+  
+function checkAndCreateConfig(default_config)
+    local config = readFromFile("YimActions.json")
+    if config == nil then
+      log.warning("Config file not found, creating a default config")
+      gui.show_warning("YimActions", "Config file not found, creating a default config")
+      if not writeToFile("YimActions.json", default_config) then
+        return false
+      end
+      config = default_config
+    end
+
+    for key, defaultValue in pairs(default_config) do
+      if config[key] == nil then
+        config[key] = defaultValue
+      end
+    end
+
+    if not writeToFile("YimActions.json", config) then
+      return false
+    end
+    return true
+end
+
+function readAndDecodeConfig()
+    while not checkAndCreateConfig(default_config) do
+      -- Wait for the file to be created
+      os.execute("sleep " .. tonumber(1))
+      log.debug("Waiting for YimActions.json to be created")
+    end
+    return readFromFile("YimActions.json")
+end
+
+function saveToConfig(item_tag, value)
+    local t = readAndDecodeConfig()
+    if t then
+      t[item_tag] = value
+      if not writeToFile("YimActions.json", t) then
+        log.debug("Failed to encode JSON to YimActions.json")
+      end
+    end
+end
+
+function readFromConfig(item_tag)
+    local t = readAndDecodeConfig()
+    if t then
+      return t[item_tag]
+    else
+      log.debug("Failed to decode JSON from YimActions.json")
+    end
+end
+
+function resetConfig(default_config)
+    writeToFile("YimActions.json", default_config)
+end
