@@ -3,9 +3,10 @@
 
 ![Screenshot 2024-02-08 040632](https://github.com/xesdoog/YimActions/assets/66764345/9bdde22d-0efa-4d6c-8385-6c0be1d79a99)
 
-![YimActions(1)](https://github.com/xesdoog/YimActions/assets/66764345/931d0fcd-9ba2-4825-aa03-84e6419bb849)
+![YimActions-modified](https://github.com/xesdoog/YimActions/assets/66764345/1ee2afb0-cf41-47d1-bfa5-cdcbf222025a)
 
-![YimActions(2)](https://github.com/xesdoog/YimActions/assets/66764345/0126046a-962b-4cec-b677-afb3379c31ce)
+
+![YimActions(4)](https://github.com/xesdoog/YimActions/assets/66764345/e26f12c0-d1de-41ea-a2c1-df23c79deb8b)
 
 > [!NOTE]
 > From now on, this will be the main script. It contains both [SAMURAI's Scenarios](https://github.com/YimMenu-Lua/SAMURAI-Scenarios) and [SAMURAI's Animations](https://github.com/YimMenu-Lua/SAMURAI-Animations) so the standalone scripts will not be updated any further. All new updates will be in this repo.
