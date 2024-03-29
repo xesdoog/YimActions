@@ -206,11 +206,18 @@ local function setballistic()
     end)
 end
 function resetCheckBoxes()
-    disableTooltips = false 
+    disableTooltips = false
     phoneAnim = false
+    lockPick = false
+    sprintInside = false
     clumsy = false
     rod = false
     disableProps = false
+    manualFlags = false
+    controllable = false
+    looped = false
+    upperbody = false
+    freeze = false
 end
 YimActions:add_imgui(function()
     if searchBar then
@@ -1095,6 +1102,8 @@ YimActions:add_imgui(function()
     end
     if ImGui.BeginTabItem("Settings") then
         searchBar = false
+        ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+        ImGui.Text("     ")
         disableTooltips, used = ImGui.Checkbox("Disable Tooltips", disableTooltips, true)
         if used then
         saveToConfig("disableTooltips", disableTooltips)
@@ -1105,8 +1114,6 @@ YimActions:add_imgui(function()
             saveToConfig("phoneAnim", phoneAnim)
         end
         helpmarker(false, "Restores the disabled phone animations from Single Player.")
-        ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
-        ImGui.Text("     ")
         sprintInside, used = ImGui.Checkbox("Sprint Inside Interiors", sprintInside, true)
         if used then
             saveToConfig("sprintInside", sprintInside)
@@ -1141,6 +1148,7 @@ YimActions:add_imgui(function()
             PED.SET_PED_CONFIG_FLAG(ped, 426, false)
         end
         ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing()
+        ImGui.Separator()
         if Button("Reset Settings", {142, 0, 0, 1}, {142, 0, 0, 0.7}, {142, 0, 0, 0.5}) then
             ImGui.OpenPopup("##Progress Bar")
         end
@@ -1149,13 +1157,13 @@ YimActions:add_imgui(function()
         if ImGui.BeginPopupModal("##Progress Bar", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.AlwaysAutoResize) then
                 displayProgressBar()
                 resetConfig(default_config)
-                resetCheckBoxes()
                 if x == 1 then
                     counter = counter + 1
-                    if counter > 150 then
+                    if counter > 100 then
                         ImGui.CloseCurrentPopup()
                         counter = 0
                         x = 0
+                        resetCheckBoxes()
                     else return
                     end
                 end
