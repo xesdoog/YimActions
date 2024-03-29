@@ -772,30 +772,6 @@ YimActions:add_imgui(function()
             coloredText("EXPERIMENTAL: This is the only way to use hotkeys with YimMenu at the moment. This was annoying to implement and it will likely be buggy. If it causes issues for you, disable it from Settings. The stop animation hotkey won't be affected.", {240, 3, 50, 0.8})
             ImGui.EndTooltip()
         end
-        -- helpmarker(false, "Use Arrow Down on [Keyboard] or [Dpad Down] on Controller to play a selected animation")
-        if phoneAnim then
-            if is_online then
-                if not ENTITY.IS_ENTITY_DEAD(ped) then
-                    PED.SET_PED_CONFIG_FLAG(ped, 242, false)
-                    PED.SET_PED_CONFIG_FLAG(ped, 243, false)
-                    PED.SET_PED_CONFIG_FLAG(ped, 244, false)
-                else
-                    PED.SET_PED_CONFIG_FLAG(ped, 242, true)
-                    PED.SET_PED_CONFIG_FLAG(ped, 243, true)
-                    PED.SET_PED_CONFIG_FLAG(ped, 244, true)
-                end
-            end
-        end
-        if sprintInside then
-            PED.SET_PED_CONFIG_FLAG(ped, 427, true)
-        else
-            PED.SET_PED_CONFIG_FLAG(ped, 427, false)
-        end
-        if lockPick then
-            PED.SET_PED_CONFIG_FLAG(ped, 426, true)
-        else
-            PED.SET_PED_CONFIG_FLAG(ped, 426, false)
-        end
         ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing()
         ImGui.Separator()
         if Button("Reset Settings", {142, 0, 0, 1}, {142, 0, 0, 0.7}, {142, 0, 0, 0.5}) then
@@ -821,6 +797,32 @@ YimActions:add_imgui(function()
         ImGui.EndTabItem()
     else
         searchBar = true
+    end
+end)
+script.register_looped("side features", function(script)
+    script:yield()
+    if phoneAnim then
+        if is_online then
+            if not ENTITY.IS_ENTITY_DEAD(ped) then
+                PED.SET_PED_CONFIG_FLAG(ped, 242, false)
+                PED.SET_PED_CONFIG_FLAG(ped, 243, false)
+                PED.SET_PED_CONFIG_FLAG(ped, 244, false)
+            else
+                PED.SET_PED_CONFIG_FLAG(ped, 242, true)
+                PED.SET_PED_CONFIG_FLAG(ped, 243, true)
+                PED.SET_PED_CONFIG_FLAG(ped, 244, true)
+            end
+        end
+    end
+    if sprintInside then
+        PED.SET_PED_CONFIG_FLAG(ped, 427, true)
+    else
+        PED.SET_PED_CONFIG_FLAG(ped, 427, false)
+    end
+    if lockPick then
+        PED.SET_PED_CONFIG_FLAG(ped, 426, true)
+    else
+        PED.SET_PED_CONFIG_FLAG(ped, 426, false)
     end
 end)
 script.register_looped("scenario hotkey", function(hotkey)
