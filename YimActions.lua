@@ -221,9 +221,8 @@ function resetCheckBoxes()
 end
 YimActions:add_imgui(function()
     if searchBar then
-        ImGui.Text("Search:")
         ImGui.PushItemWidth(270)
-        searchQuery, used = ImGui.InputText("##searchBar", searchQuery, 32)
+        searchQuery, used = ImGui.InputTextWithHint("##searchBar", "Search", searchQuery, 32)
         if ImGui.IsItemActive() then
             is_typing = true
         else
@@ -531,15 +530,15 @@ YimActions:add_imgui(function()
             saveToConfig("clumsy", clumsy)
             saveToConfig("rod", rod)
         end
-        helpmarker(false, "Makes You Ragdoll When You Collide With Any Object.\n(Doesn't work with Ragdoll On Demand)")
-        ImGui.SameLine()
+        widgetToolTip(false, "Makes You Ragdoll When You Collide With Any Object.\n(Doesn't work with Ragdoll On Demand)")
+        ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
         rod, used = ImGui.Checkbox("Ragdoll On Demand", rod, true)
         if rod then
             clumsy = false
             saveToConfig("rod", rod)
             saveToConfig("clumsy", clumsy)
         end
-        helpmarker(false, "Press [X] On Keyboard or [LT] On Controller To Instantly Ragdoll. The Longer You Hold The Button, The Longer You Stay On The Ground.\n(Doesn't work with Clumsy)")
+        widgetToolTip(false, "Press [X] On Keyboard or [LT] On Controller To Instantly Ragdoll. The Longer You Hold The Button, The Longer You Stay On The Ground.\n(Doesn't work with Clumsy)")
         ImGui.Spacing()
         ImGui.Text("Movement Options:")
         ImGui.Spacing()
@@ -549,20 +548,20 @@ YimActions:add_imgui(function()
             PED.RESET_PED_MOVEMENT_CLIPSET(ped, 0.0)
             isChanged = false
         end
-        ImGui.SameLine()
+        ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
         switch, isChanged = ImGui.RadioButton("Drunk", switch, 1)
         widgetToolTip(false, "Works Great With Ragdoll Options.")
         if isChanged then setdrunk() end
-        ImGui.SameLine()
+        ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
         switch, isChanged = ImGui.RadioButton("Hoe", switch, 2)
         if isChanged then sethoe() end
         switch, isChanged = ImGui.RadioButton("Crouch", switch, 3)
         widgetToolTip(false, "You can pair this with the default stealth action [LEFT CTRL].")
         if isChanged then setcrouched() end
-        ImGui.SameLine()
+        ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
         switch, isChanged = ImGui.RadioButton("Lester", switch, 4)
         if isChanged then setlester() end
-        ImGui.SameLine()
+        ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
         switch, isChanged = ImGui.RadioButton("Heavy", switch, 5)
         if isChanged then setballistic() end
         ImGui.Separator()
