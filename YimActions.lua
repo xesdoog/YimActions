@@ -423,7 +423,7 @@ YimActions:add_imgui(function()
             end
         end
         ImGui.SameLine()
-        if ImGui.Button("   Stop    ") then
+        if ImGui.Button("   Stop   ") then
             if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
                 cleanup()
                 is_playing_anim = false
