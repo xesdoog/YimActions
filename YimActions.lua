@@ -449,7 +449,7 @@ YimActions:add_imgui(function()
             end
         end
         ImGui.SameLine()
-        if ImGui.Button("   Stop    ") then
+        if ImGui.Button("   Stop   ") then
             if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
                 cleanup()
                 local veh = PED.GET_VEHICLE_PED_IS_USING(ped)
@@ -907,7 +907,7 @@ YimActions:add_imgui(function()
         end
         ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() 
         ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
-        if ImGui.Button("   Stop    ") then
+        if ImGui.Button("   Stop   ") then
             if is_playing_scenario then
                 script.run_in_fiber(function(script)
                     busyspinner("Stopping scenario...", 3)
