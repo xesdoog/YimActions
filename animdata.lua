@@ -322,6 +322,7 @@ npcList = {
     {group = "PED_TYPE_ARMY", hash = 0x5076A73B, name = "Mercenary 02"},
     {group = "PED_TYPE_COP", hash = 0x15F8700D, name = "Police (female)"},
     {group = "PED_TYPE_COP", hash = 0x5E3DA4A4, name = "Police (male)"},
+    {group = "PED_TYPE_COP", hash = 0x7671A8F6, name = "Imani"},
 }
 
 function Button(text, color, hovercolor, activecolor)
@@ -404,12 +405,523 @@ function entToNet(entity, netID)
     end)
 end
 
+function playSelected(target, propPed, targetBone, targetCoords, targetHeading, targetForwardX, targetForwardY, targetBoneCoords)
+    if info.type == 1 then
+        cleanup()
+        script.run_in_fiber(function()
+            if not disableProps then
+                while not STREAMING.HAS_MODEL_LOADED(info.prop1) do
+                    STREAMING.REQUEST_MODEL(info.prop1)
+                    coroutine.yield()
+                end
+                prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0.0, true, true, true)
+                table.insert(spawned_entities, prop1)
+                ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, target, targetBone, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
+            end
+            while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
+                STREAMING.REQUEST_ANIM_DICT(info.dict)
+                coroutine.yield()
+            end
+            TASK.TASK_PLAY_ANIM(target, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+            PED.SET_PED_CONFIG_FLAG(target, 179, true)
+            is_playing_anim = true
+        end)
+    elseif info.type == 2 then
+        cleanup()
+        script.run_in_fiber(function(type2)
+            while not STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
+                STREAMING.REQUEST_NAMED_PTFX_ASSET(info.ptfxdict)
+                coroutine.yield()
+            end
+            while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
+                STREAMING.REQUEST_ANIM_DICT(info.dict)
+                coroutine.yield()
+            end
+            TASK.TASK_PLAY_ANIM(target, info.dict, info.anim, 4.0, -4.0, -1, flag, 0, false, false, false)
+            PED.SET_PED_CONFIG_FLAG(target, 179, true)
+            is_playing_anim = true
+            type2:sleep(info.ptfxdelay)
+            GRAPHICS.USE_PARTICLE_FX_ASSET(info.ptfxdict)
+            loopedFX = GRAPHICS.START_NETWORKED_PARTICLE_FX_LOOPED_ON_ENTITY_BONE(info.ptfxname, target, info.ptfxOffx, info.ptfxOffy, info.ptfxOffz, info.ptfxrotx, info.ptfxroty, info.ptfxrotz, targetBone, info.ptfxscale, false, false, false, 0, 0, 0, 0)
+        end)
+    elseif info.type == 3 then
+        cleanup()
+        script.run_in_fiber(function()
+            if not disableProps then
+                while not STREAMING.HAS_MODEL_LOADED(info.prop1) do
+                    STREAMING.REQUEST_MODEL(info.prop1)
+                    coroutine.yield()
+                end
+                prop1 = OBJECT.CREATE_OBJECT(info.prop1, targetCoords.x + targetForwardX /1.7, targetCoords.y + targetForwardY /1.7, targetCoords.z, true, true, false)
+                table.insert(spawned_entities, prop1)
+                ENTITY.SET_ENTITY_HEADING(prop1, targetHeading + info.rotz)
+                OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
+            end
+            while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
+                STREAMING.REQUEST_ANIM_DICT(info.dict)
+                coroutine.yield()
+            end
+            TASK.TASK_PLAY_ANIM(target, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+            PED.SET_PED_CONFIG_FLAG(target, 179, true)
+            is_playing_anim = true
+        end)
+    elseif info.type == 4 then
+        cleanup()
+        script.run_in_fiber(function(type4)
+            if not disableProps then
+                while not STREAMING.HAS_MODEL_LOADED(info.prop1) do
+                    STREAMING.REQUEST_MODEL(info.prop1)
+                    coroutine.yield()
+                end
+                prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0.0, true, true, false)
+                table.insert(spawned_entities, prop1)
+                ENTITY.SET_ENTITY_Coords(prop1, targetBoneCoords.x + info.posx, targetBoneCoords.y + info.posy, targetBoneCoords.z + info.posz)
+                type4:sleep(20)
+                OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
+                ENTITY.SET_ENTITY_COLLISION(prop1, info.propColl, info.propColl)
+            end
+            while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
+                STREAMING.REQUEST_ANIM_DICT(info.dict)
+                coroutine.yield()
+            end
+            TASK.TASK_PLAY_ANIM(target, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+            PED.SET_PED_CONFIG_FLAG(target, 179, true)
+            is_playing_anim = true
+        end)
+    elseif info.type == 5 then
+        cleanup()
+        script.run_in_fiber(function(type5)
+            while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
+                STREAMING.REQUEST_ANIM_DICT(info.dict)
+                coroutine.yield()
+            end
+            TASK.TASK_PLAY_ANIM(target, info.dict, info.anim, 4.0, -4.0, -1, flag, 0.0, false, false, false)
+            PED.SET_PED_CONFIG_FLAG(target, 179, true)
+            if not disableProps then
+                while not STREAMING.HAS_MODEL_LOADED(info.prop1) do
+                    STREAMING.REQUEST_MODEL(info.prop1)
+                    coroutine.yield()
+                end
+                prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0.0, true, true, false)
+                table.insert(spawned_entities, prop1)
+                ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, target, targetBone, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
+                type5:sleep(50)
+                while not STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
+                    STREAMING.REQUEST_NAMED_PTFX_ASSET(info.ptfxdict)
+                    coroutine.yield()
+                end
+                type5:sleep(info.ptfxdelay)
+                GRAPHICS.USE_PARTICLE_FX_ASSET(info.ptfxdict)
+                loopedFX = GRAPHICS.START_NETWORKED_PARTICLE_FX_LOOPED_ON_ENTITY(info.ptfxname, prop1, info.ptfxOffx, info.ptfxOffy, info.ptfxOffz, info.ptfxrotx, info.ptfxroty, info.ptfxrotz, info.ptfxscale, false, false, false, 0, 0, 0, 0)
+            end
+            is_playing_anim = true
+        end)
+    elseif info.type == 6 then
+            cleanup()
+            script.run_in_fiber(function()
+                if not disableProps then
+                    while not STREAMING.HAS_MODEL_LOADED(info.prop1) do
+                        STREAMING.REQUEST_MODEL(info.prop1)
+                        coroutine.yield()
+                    end
+                    prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0.0, true, true, false)
+                    table.insert(spawned_entities, prop1)
+                    ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, target, targetBone, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
+                    while not STREAMING.HAS_MODEL_LOADED(info.prop2) do
+                        STREAMING.REQUEST_MODEL(info.prop2)
+                        coroutine.yield()
+                    end
+                    prop2 = OBJECT.CREATE_OBJECT(info.prop2, 0.0, 0.0, 0.0, true, true, false)
+                    table.insert(spawned_entities, prop2)
+                    ENTITY.ATTACH_ENTITY_TO_ENTITY(prop2, target, target.GET_PED_BONE_INDEX(target, info.bone2), info.posx2, info.posy2, info.posz2, info.rotx2, info.roty2, info.rotz2, false, false, false, false, 2, true, 1)
+                end
+                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
+                    STREAMING.REQUEST_ANIM_DICT(info.dict)
+                    coroutine.yield()
+                end
+                TASK.TASK_PLAY_ANIM(target, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                PED.SET_PED_CONFIG_FLAG(target, 179, true)
+                is_playing_anim = true
+            end)
+    elseif info.type == 7 then
+        cleanup()
+        script.run_in_fiber(function()
+            if not disableProps then
+                while not STREAMING.HAS_MODEL_LOADED(info.pedHash) do
+                    STREAMING.REQUEST_MODEL(info.pedHash)
+                    coroutine.yield()
+                end
+                propPed = PED.CREATE_PED(info.pedType, info.pedHash, 0.0, 0.0, 0.0, 0.0, true, false)
+                ENTITY.ATTACH_ENTITY_TO_ENTITY(propPed, target, targetBone, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, true, false, true, 1, true, 1)
+                ENTITY.SET_ENTITY_INVINCIBLE(propPed, true)
+                table.insert(spawned_entities, propPed)
+                npcNetID = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(propPed)
+                RequestControl(propPed, npcNetID, 250)
+                entToNet(propPed, npcNetID)
+                while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict2) do
+                    STREAMING.REQUEST_ANIM_DICT(info.dict2)
+                    coroutine.yield()
+                end
+                TASK.TASK_PLAY_ANIM(propPed, info.dict2, info.anim2, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                PED.SET_PED_CONFIG_FLAG(propPed, 179, true)
+                PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(propPed, true)
+            end
+            while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
+                STREAMING.REQUEST_ANIM_DICT(info.dict)
+                coroutine.yield()
+            end
+            TASK.TASK_PLAY_ANIM(target, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+            PED.SET_PED_CONFIG_FLAG(target, 179, true)
+            TASK.TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(propPed, true)
+            is_playing_anim = true
+        end)
+    else
+        cleanup()
+        script.run_in_fiber(function()
+            while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
+                STREAMING.REQUEST_ANIM_DICT(info.dict)
+                coroutine.yield()
+            end
+            TASK.TASK_PLAY_ANIM(target, info.dict, info.anim, 4.0, -4.0, -1, flag, 0.0, false, false, false)
+            PED.SET_PED_CONFIG_FLAG(target, 179, true)
+            is_playing_anim = true
+        end)
+    end
+end
+--------------------------------------------------------------------------------------------
+--[[
+  RXI JSON Library (Modified by Harmless)
+  Credits: RXI (json.lua (https://github.com/rxi/json.lua) - for the original library)
+]]--
+function json()
+    local json = { _version = "0.1.2" }
+    --encode
+    local encode
+
+    local escape_char_map = {
+      [ "\\" ] = "\\",
+      [ "\"" ] = "\"",
+      [ "\b" ] = "b",
+      [ "\f" ] = "f",
+      [ "\n" ] = "n",
+      [ "\r" ] = "r",
+      [ "\t" ] = "t",
+    }
+
+    local escape_char_map_inv = { [ "/" ] = "/" }
+    for k, v in pairs(escape_char_map) do
+      escape_char_map_inv[v] = k
+    end
+
+    local function escape_char(c)
+      return "\\" .. (escape_char_map[c] or string.format("u%04x", c:byte()))
+    end
+
+    local function encode_nil(val)
+      return "null"
+    end
+
+    local function encode_table(val, stack)
+      local res = {}
+      stack = stack or {}
+      if stack[val] then error("circular reference") end
+
+      stack[val] = true
+
+      if rawget(val, 1) ~= nil or next(val) == nil then
+        local n = 0
+        for k in pairs(val) do
+          if type(k) ~= "number" then
+            error("invalid table: mixed or invalid key types")
+          end
+          n = n + 1
+        end
+        if n ~= #val then
+          error("invalid table: sparse array")
+        end
+        for i, v in ipairs(val) do
+          table.insert(res, encode(v, stack))
+        end
+        stack[val] = nil
+        return "[" .. table.concat(res, ",") .. "]"
+      else
+        for k, v in pairs(val) do
+          if type(k) ~= "string" then
+            error("invalid table: mixed or invalid key types")
+          end
+          table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+        end
+        stack[val] = nil
+        return "{" .. table.concat(res, ",") .. "}"
+      end
+    end
+
+    local function encode_string(val)
+      return '"' .. val:gsub('[%z\1-\31\\"]', escape_char) .. '"'
+    end
+
+    local function encode_number(val)
+      if val ~= val or val <= -math.huge or val >= math.huge then
+        error("unexpected number value '" .. tostring(val) .. "'")
+      end
+      return string.format("%.14g", val)
+    end
+
+    local type_func_map = {
+      [ "nil"     ] = encode_nil,
+      [ "table"   ] = encode_table,
+      [ "string"  ] = encode_string,
+      [ "number"  ] = encode_number,
+      [ "boolean" ] = tostring,
+    }
+
+    encode = function(val, stack)
+      local t = type(val)
+      local f = type_func_map[t]
+      if f then
+        return f(val, stack)
+      end
+      error("unexpected type '" .. t .. "'")
+    end
+
+    function json.encode(val)
+      return ( encode(val) )
+    end
+
+
+    --decode
+    local parse
+
+    local function create_set(...)
+      local res = {}
+      for i = 1, select("#", ...) do
+        res[ select(i, ...) ] = true
+      end
+      return res
+    end
+
+    local space_chars   = create_set(" ", "\t", "\r", "\n")
+    local delim_chars   = create_set(" ", "\t", "\r", "\n", "]", "}", ",")
+    local escape_chars  = create_set("\\", "/", '"', "b", "f", "n", "r", "t", "u")
+    local literals      = create_set("true", "false", "null")
+
+    local literal_map = {
+      [ "true"  ] = true,
+      [ "false" ] = false,
+      [ "null"  ] = nil,
+    }
+
+    local function next_char(str, idx, set, negate)
+      for i = idx, #str do
+        if set[str:sub(i, i)] ~= negate then
+          return i
+        end
+      end
+      return #str + 1
+    end
+
+    local function decode_error(str, idx, msg)
+      local line_count = 1
+      local col_count = 1
+      for i = 1, idx - 1 do
+        col_count = col_count + 1
+        if str:sub(i, i) == "\n" then
+          line_count = line_count + 1
+          col_count = 1
+        end
+      end
+      error( string.format("%s at line %d col %d", msg, line_count, col_count) )
+    end
+
+    local function codepoint_to_utf8(n)
+      local f = math.floor
+      if n <= 0x7f then
+        return string.char(n)
+      elseif n <= 0x7ff then
+        return string.char(f(n / 64) + 192, n % 64 + 128)
+      elseif n <= 0xffff then
+        return string.char(f(n / 4096) + 224, f(n % 4096 / 64) + 128, n % 64 + 128)
+      elseif n <= 0x10ffff then
+        return string.char(f(n / 262144) + 240, f(n % 262144 / 4096) + 128,
+                          f(n % 4096 / 64) + 128, n % 64 + 128)
+      end
+      error( string.format("invalid unicode codepoint '%x'", n) )
+    end
+
+    local function parse_unicode_escape(s)
+      local n1 = tonumber( s:sub(1, 4),  16 )
+      local n2 = tonumber( s:sub(7, 10), 16 )
+      if n2 then
+        return codepoint_to_utf8((n1 - 0xd800) * 0x400 + (n2 - 0xdc00) + 0x10000)
+      else
+        return codepoint_to_utf8(n1)
+      end
+    end
+
+    local function parse_string(str, i)
+      local res = ""
+      local j = i + 1
+      local k = j
+
+      while j <= #str do
+        local x = str:byte(j)
+        if x < 32 then
+          decode_error(str, j, "control character in string")
+        elseif x == 92 then -- `\`: Escape
+          res = res .. str:sub(k, j - 1)
+          j = j + 1
+          local c = str:sub(j, j)
+          if c == "u" then
+            local hex = str:match("^[dD][89aAbB]%x%x\\u%x%x%x%x", j + 1)
+                    or str:match("^%x%x%x%x", j + 1)
+                    or decode_error(str, j - 1, "invalid unicode escape in string")
+            res = res .. parse_unicode_escape(hex)
+            j = j + #hex
+          else
+            if not escape_chars[c] then
+              decode_error(str, j - 1, "invalid escape char '" .. c .. "' in string")
+            end
+            res = res .. escape_char_map_inv[c]
+          end
+          k = j + 1
+        elseif x == 34 then -- `"`: End of string
+          res = res .. str:sub(k, j - 1)
+          return res, j + 1
+        end
+        j = j + 1
+      end
+      decode_error(str, i, "expected closing quote for string")
+    end
+
+    local function parse_number(str, i)
+      local x = next_char(str, i, delim_chars)
+      local s = str:sub(i, x - 1)
+      local n = tonumber(s)
+      if not n then
+        decode_error(str, i, "invalid number '" .. s .. "'")
+      end
+      return n, x
+    end
+
+    local function parse_literal(str, i)
+      local x = next_char(str, i, delim_chars)
+      local word = str:sub(i, x - 1)
+      if not literals[word] then
+        decode_error(str, i, "invalid literal '" .. word .. "'")
+      end
+      return literal_map[word], x
+    end
+
+    local function parse_array(str, i)
+      local res = {}
+      local n = 1
+      i = i + 1
+      while 1 do
+        local x
+        i = next_char(str, i, space_chars, true)
+        -- Empty / end of array?
+        if str:sub(i, i) == "]" then
+          i = i + 1
+          break
+        end
+        -- Read token
+        x, i = parse(str, i)
+        res[n] = x
+        n = n + 1
+        -- Next token
+        i = next_char(str, i, space_chars, true)
+        local chr = str:sub(i, i)
+        i = i + 1
+        if chr == "]" then break end
+        if chr ~= "," then decode_error(str, i, "expected ']' or ','") end
+      end
+      return res, i
+    end
+
+    local function parse_object(str, i)
+      local res = {}
+      i = i + 1
+      while 1 do
+        local key, val
+        i = next_char(str, i, space_chars, true)
+        -- Empty / end of object?
+        if str:sub(i, i) == "}" then
+          i = i + 1
+          break
+        end
+        -- Read key
+        if str:sub(i, i) ~= '"' then
+          decode_error(str, i, "expected string for key")
+        end
+        key, i = parse(str, i)
+        -- Read ':' delimiter
+        i = next_char(str, i, space_chars, true)
+        if str:sub(i, i) ~= ":" then
+          decode_error(str, i, "expected ':' after key")
+        end
+        i = next_char(str, i + 1, space_chars, true)
+        -- Read value
+        val, i = parse(str, i)
+        -- Set
+        res[key] = val
+        -- Next token
+        i = next_char(str, i, space_chars, true)
+        local chr = str:sub(i, i)
+        i = i + 1
+        if chr == "}" then break end
+        if chr ~= "," then decode_error(str, i, "expected '}' or ','") end
+      end
+      return res, i
+    end
+
+    local char_func_map = {
+      [ '"' ] = parse_string,
+      [ "0" ] = parse_number,
+      [ "1" ] = parse_number,
+      [ "2" ] = parse_number,
+      [ "3" ] = parse_number,
+      [ "4" ] = parse_number,
+      [ "5" ] = parse_number,
+      [ "6" ] = parse_number,
+      [ "7" ] = parse_number,
+      [ "8" ] = parse_number,
+      [ "9" ] = parse_number,
+      [ "-" ] = parse_number,
+      [ "t" ] = parse_literal,
+      [ "f" ] = parse_literal,
+      [ "n" ] = parse_literal,
+      [ "[" ] = parse_array,
+      [ "{" ] = parse_object,
+    }
+
+    parse = function(str, idx)
+      local chr = str:sub(idx, idx)
+      local f = char_func_map[chr]
+      if f then
+        return f(str, idx)
+      end
+      decode_error(str, idx, "unexpected character '" .. chr .. "'")
+    end
+
+    function json.decode(str)
+      if type(str) ~= "string" then
+        error("expected argument of type string, got " .. type(str))
+      end
+      local res, idx = parse(str, next_char(str, 1, space_chars, true))
+      idx = next_char(str, idx, space_chars, true)
+      if idx <= #str then
+        decode_error(str, idx, "trailing garbage")
+      end
+      return res
+    end
+    return json
+end
 ----------------------------------------------------------------------------
 --[[Config System:
 Credits to Harmless05 for this fine piece of work. 
 This was the only json config system that my smol fried brain could fathom. 
 Thank you, beautiful stranger <3
---]]
+]]--
 function writeToFile(filename, data)
     local file, _ = io.open(filename, "w")
     if file == nil then
