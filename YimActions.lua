@@ -12,22 +12,24 @@ local spawned_entities = {}
 local spawned_npcs = {}
 local searchQuery = ""
 local is_typing = false
-local controllable = false
-local looped = false
-local upperbody = false
-local freeze = false
 local searchBar = true
 local x = 0
 local counter = 0
 is_playing_anim = false
 is_playing_scenario = false
-default_config = {disableTooltips = false, phoneAnim = false, clumsy = false, rod = false, disableProps = false}
+default_config = {disableTooltips = false, phoneAnim = false, clumsy = false, rod = false, disableProps = false, sprintInside = false, lockpick = false, manualFlags = false, controllable = false, looped = false, upperbody = false, freeze = false}
 local disableTooltips = readFromConfig("disableTooltips")
 local phoneAnim = readFromConfig("phoneAnim")
 local clumsy = readFromConfig("clumsy")
 local rod = readFromConfig("rod")
-local manualFlags = false
+local sprintInside = readFromConfig("sprintInside")
 local disableProps = readFromConfig("disableProps")
+local lockPick = readFromConfig("lockPick")
+local manualFlags = readFromConfig("manualFlags")
+local controllable = readFromConfig("controllable")
+local looped = readFromConfig("looped")
+local upperbody = readFromConfig("upperbody")
+local freeze = readFromConfig("freeze")
 script.register_looped("playerID", function(playerID)
     if NETWORK.NETWORK_IS_SESSION_ACTIVE() then
         is_online = true
@@ -223,10 +225,13 @@ YimActions:add_imgui(function()
     end
     ImGui.BeginTabBar("Samurai's YimActions", ImGuiTabBarFlags.None)
     if ImGui.BeginTabItem("Animations") then
-        ImGui.PushItemWidth(350)
+        ImGui.PushItemWidth(345)
         displayFilteredAnims()
         ImGui.Separator()
         manualFlags, used = ImGui.Checkbox("Edit Flags", manualFlags, true)
+        if used then
+            saveToConfig("manualFlags", manualFlags)
+        end
         helpmarker(false, "Allows you to customize how the animation plays.\nExample: if an animation is set to loop but you want it to freeze, activate this then choose your desired settings.")
         ImGui.SameLine()
         disableProps, used = ImGui.Checkbox("Disable Props", disableProps, true)
@@ -237,14 +242,26 @@ YimActions:add_imgui(function()
         if manualFlags then
             ImGui.Separator()
             controllable, used = ImGui.Checkbox("Allow Control", controllable, true)
+            if used then
+                saveToConfig("controllable", controllable)
+            end
             helpmarker(false, "Allows you to keep control of your character and/or vehicle. If paired with 'Upper Body Only', you can play animations and walk/run/drive around.")
             ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
             looped, used = ImGui.Checkbox("Loop", looped, true)
+            if used then
+                saveToConfig("looped", looped)
+            end
             helpmarker(false, "Plays the animation forever until you manually stop it.")
             upperbody, used = ImGui.Checkbox("Upper Body Only", upperbody, true)
+            if used then
+                saveToConfig("upperbody", upperbody)
+            end
             helpmarker(false, "Only plays the animation on you character's upperbody (from the waist up).")
             ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
             freeze, used = ImGui.Checkbox("Freeze", freeze, true)
+            if used then
+                saveToConfig("freeze", freeze)
+            end
             helpmarker(false, "Freezes the animation at the very last frame. Useful for ragdoll/sleeping/dead animations.")
         end
         local info = filteredAnims[anim_index + 1]
@@ -290,6 +307,7 @@ YimActions:add_imgui(function()
                         coroutine.yield()
                     end
                     TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                    PED.SET_PED_CONFIG_FLAG(ped, 179, true)
                     is_playing_anim = true
                 end)
             elseif info.type == 2 then
@@ -304,6 +322,7 @@ YimActions:add_imgui(function()
                         coroutine.yield()
                     end
                     TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 0, false, false, false)
+                    PED.SET_PED_CONFIG_FLAG(ped, 179, true)
                     is_playing_anim = true
                     type2:sleep(info.ptfxdelay)
                     GRAPHICS.USE_PARTICLE_FX_ASSET(info.ptfxdict)
@@ -327,6 +346,7 @@ YimActions:add_imgui(function()
                         coroutine.yield()
                     end
                     TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                    PED.SET_PED_CONFIG_FLAG(ped, 179, true)
                     is_playing_anim = true
                 end)
             elseif info.type == 4 then
@@ -349,6 +369,7 @@ YimActions:add_imgui(function()
                         coroutine.yield()
                     end
                     TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                    PED.SET_PED_CONFIG_FLAG(ped, 179, true)
                     is_playing_anim = true
                 end)
             elseif info.type == 5 then
@@ -359,6 +380,7 @@ YimActions:add_imgui(function()
                         coroutine.yield()
                     end
                     TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 0.0, false, false, false)
+                    PED.SET_PED_CONFIG_FLAG(ped, 179, true)
                     if not disableProps then
                         while not STREAMING.HAS_MODEL_LOADED(info.prop1) do
                             STREAMING.REQUEST_MODEL(info.prop1)
@@ -402,6 +424,7 @@ YimActions:add_imgui(function()
                             coroutine.yield()
                         end
                         TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 1.0, false, false, false)
+                        PED.SET_PED_CONFIG_FLAG(ped, 179, true)
                         is_playing_anim = true
                     end)
             elseif info.type == 7 then
@@ -444,6 +467,7 @@ YimActions:add_imgui(function()
                         coroutine.yield()
                     end
                     TASK.TASK_PLAY_ANIM(ped, info.dict, info.anim, 4.0, -4.0, -1, flag, 0.0, false, false, false)
+                    PED.SET_PED_CONFIG_FLAG(ped, 179, true)
                     is_playing_anim = true
                 end)
             end
@@ -1076,10 +1100,51 @@ YimActions:add_imgui(function()
         saveToConfig("disableTooltips", disableTooltips)
         end
         widgetToolTip(false, "Well, it disables this thing.")
+        phoneAnim, used = ImGui.Checkbox("Enable Phone Animations", phoneAnim, true)
+        if used then
+            saveToConfig("phoneAnim", phoneAnim)
+        end
+        helpmarker(false, "Restores the disabled phone animations from Single Player.")
         ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+        ImGui.Text("     ")
+        sprintInside, used = ImGui.Checkbox("Sprint Inside Interiors", sprintInside, true)
+        if used then
+            saveToConfig("sprintInside", sprintInside)
+        end
+        helpmarker(false, "Allows you to sprint at full speed inside interiors that do not allow it like the Casino.")
+        lockPick, used = ImGui.Checkbox("Use Lockpick Animation", lockPick, true)
+        if used then
+            saveToConfig("lockPick", lockPick)
+        end
+        helpmarker(false, "When stealing vehicles, your character will use the lockpick animation instead of breaking the window.")
+        if phoneAnim then
+            if is_online then
+                if not ENTITY.IS_ENTITY_DEAD(ped) then
+                    PED.SET_PED_CONFIG_FLAG(ped, 242, false)
+                    PED.SET_PED_CONFIG_FLAG(ped, 243, false)
+                    PED.SET_PED_CONFIG_FLAG(ped, 244, false)
+                else
+                    PED.SET_PED_CONFIG_FLAG(ped, 242, true)
+                    PED.SET_PED_CONFIG_FLAG(ped, 243, true)
+                    PED.SET_PED_CONFIG_FLAG(ped, 244, true)
+                end
+            end
+        end
+        if sprintInside then
+            PED.SET_PED_CONFIG_FLAG(ped, 427, true)
+        else
+            PED.SET_PED_CONFIG_FLAG(ped, 427, false)
+        end
+        if lockPick then
+            PED.SET_PED_CONFIG_FLAG(ped, 426, true)
+        else
+            PED.SET_PED_CONFIG_FLAG(ped, 426, false)
+        end
+        ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing()
         if Button("Reset Settings", {142, 0, 0, 1}, {142, 0, 0, 0.7}, {142, 0, 0, 0.5}) then
             ImGui.OpenPopup("##Progress Bar")
         end
+        widgetToolTip(false, "Revert saved settings and disable all checkboxes.")
         ImGui.SetNextWindowBgAlpha(0)
         if ImGui.BeginPopupModal("##Progress Bar", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.AlwaysAutoResize) then
                 displayProgressBar()
@@ -1095,28 +1160,6 @@ YimActions:add_imgui(function()
                     end
                 end
             ImGui.EndPopup()
-        end
-        phoneAnim, used = ImGui.Checkbox("Enable Phone Animations", phoneAnim, true)
-        if used then
-            saveToConfig("phoneAnim", phoneAnim)
-        end
-        helpmarker(false, "Restores the disabled phone animations from Single Player.")
-        ImGui.SameLine()
-        if ImGui.SmallButton("Dummy") then
-            gui.show_message("Bruh!", "Stop pressing dummy buttons.")
-        end
-        if phoneAnim then
-            if is_online then
-                if not ENTITY.IS_ENTITY_DEAD(ped) then
-                    PED.SET_PED_CONFIG_FLAG(ped, 242, false)
-                    PED.SET_PED_CONFIG_FLAG(ped, 243, false)
-                    PED.SET_PED_CONFIG_FLAG(ped, 244, false)
-                else
-                    PED.SET_PED_CONFIG_FLAG(ped, 242, true)
-                    PED.SET_PED_CONFIG_FLAG(ped, 243, true)
-                    PED.SET_PED_CONFIG_FLAG(ped, 244, true)
-                end
-            end
         end
         ImGui.EndTabItem()
     else
