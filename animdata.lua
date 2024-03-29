@@ -399,11 +399,17 @@ function entToNet(entity, netID)
             NETWORK.SET_NETWORK_ID_VISIBLE_IN_CUTSCENE(netID, false, true)
             NETWORK.NETWORK_SET_ENTITY_ONLY_EXISTS_FOR_PARTICIPANTS(entity, false)
             NETWORK.SET_NETWORK_ID_ALWAYS_EXISTS_FOR_PLAYER(netID, ped, true)
-            NETWORK.SET_NETWORK_ID_CAN_MIGRATE(netID, false) -- prevent other players on the network from taking control of the entity.
+            NETWORK.SET_NETWORK_ID_CAN_MIGRATE(netID, false)
         end
     end)
 end
 
+----------------------------------------------------------------------------
+--[[Config System:
+Credits to Harmless05 for this fine piece of work. 
+This was the only json config system that my smol fried brain could fathom. 
+Thank you, beautiful stranger <3
+--]]
 function writeToFile(filename, data)
     local file, _ = io.open(filename, "w")
     if file == nil then
@@ -480,3 +486,4 @@ end
 function resetConfig(default_config)
     writeToFile("YimActions.json", default_config)
 end
+-------------------------------------------------------------------------------
