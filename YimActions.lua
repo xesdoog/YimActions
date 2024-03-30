@@ -187,19 +187,27 @@ script.register_looped("Ragdoll Loop", function(script)
     script:yield()
 end)
 script.register_looped("follow ped", function(follow)
-    if ENTITY.DOES_ENTITY_EXIST(npc) then
-        if ENTITY.IS_ENTITY_DEAD(npc) then
-            follow:sleep(5000)
-            PED.DELETE_PED(npc) -- stop trying to put dead monkeys in my car >:[
-            for k, v in ipairs(spawned_npcs) do
+    for k, v in ipairs(spawned_npcs) do
+        if ENTITY.DOES_ENTITY_EXIST(v) then
+            if ENTITY.IS_ENTITY_DEAD(v) then
+                follow:sleep(5000)
+                PED.DELETE_PED(v) -- stop trying to put dead monkeys in my car >:[
                 table.remove(spawned_npcs, k)
+            elseif PED.IS_PED_IN_ANY_VEHICLE(ped, true) and not PED.IS_PED_SITTING_IN_ANY_VEHICLE(v) then
+                local veh = PED.GET_VEHICLE_PED_IS_USING(ped)
+                if VEHICLE.IS_VEHICLE_SEAT_FREE(veh, 0, 0) then
+                    seat = 0
+                else
+                    seat = tostring(k)
+                end
+                TASK.CLEAR_PED_TASKS(v)
+                TASK.TASK_ENTER_VEHICLE(v, veh, 20000, seat, 2.0, 16, 0)
+                follow:sleep(2000)
+            elseif PED.IS_PED_SITTING_IN_ANY_VEHICLE(v) and not PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
+                TASK.CLEAR_PED_TASKS(v)
+                TASK.TASK_LEAVE_VEHICLE(v, veh, 0)
+                TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, ped, 0.5, 0.5, 0.0, -1, -1, 1.4, true)
             end
-        elseif PED.IS_PED_IN_ANY_VEHICLE(ped, false) and not PED.IS_PED_SITTING_IN_ANY_VEHICLE(npc) then
-            local veh = PED.GET_VEHICLE_PED_IS_USING(ped)
-            PED.SET_PED_INTO_VEHICLE(npc, veh, 0)
-        elseif PED.IS_PED_SITTING_IN_ANY_VEHICLE(npc) and not PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
-            TASK.CLEAR_PED_TASKS_IMMEDIATELY(npc)
-            TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, ped, 0.5, 0.5, 0.0, -1, -1, 1.4, true)
         end
         follow:yield()
     end
@@ -258,13 +266,22 @@ YimActions:add_imgui(function()
         function cleanup()
             script.run_in_fiber(function()
                 TASK.CLEAR_PED_TASKS(ped)
-                ENTITY.DELETE_ENTITY(prop1)
-                ENTITY.DELETE_ENTITY(prop2)
                 GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
                 if ENTITY.DOES_ENTITY_EXIST(sexPed) then
                     PED.DELETE_PED(sexPed)
+                end
+                if spawned_entities[1] ~= nil then
+                    for _, v in ipairs(spawned_entities) do
+                        script.run_in_fiber(function(script)
+                            if ENTITY.DOES_ENTITY_EXIST(v) then
+                                ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
+                                script:sleep(100)
+                                ENTITY.DELETE_ENTITY(v)
+                            end
+                        end)
+                    end
                 end
             end)
         end
@@ -281,6 +298,7 @@ YimActions:add_imgui(function()
                 flag = info.flag
             end
             playSelected(ped, sexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords)
+            is_playing_anim = true
         end
         ImGui.SameLine()
         if ImGui.Button("   Stop   ") then
@@ -291,7 +309,6 @@ YimActions:add_imgui(function()
                 is_playing_anim = false
             else
                 cleanup()
-                is_playing_anim = false
                 local current_coords = ENTITY.GET_ENTITY_COORDS(ped)
                 ENTITY.SET_ENTITY_COORDS_NO_OFFSET(ped, current_coords.x, current_coords.y, current_coords.z, true, false, false)
             end
@@ -379,16 +396,27 @@ YimActions:add_imgui(function()
         local npcData = filteredNpcs[npc_index + 1]
         function cleanupNPC()
             script.run_in_fiber(function()
-                TASK.CLEAR_PED_TASKS(npc)
-                ENTITY.DELETE_ENTITY(npc_prop1)
-                ENTITY.DELETE_ENTITY(npc_prop2)
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX2)
-                STREAMING.REMOVE_ANIM_DICT(info.dict)
-                STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-                TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, ped, 0.5, 0.5, 0.0, -1, -1, 1.4, true)
+                for _, v in ipairs(spawned_npcs) do
+                    TASK.CLEAR_PED_TASKS(v)
+                    TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, ped, 0.5, 0.5, 0.0, -1, -1, 1.4, true)
+                end
+                if spawned_entities[1] ~= nil then
+                    for _, b in ipairs(spawned_entities) do
+                        script.run_in_fiber(function(script)
+                            if ENTITY.DOES_ENTITY_EXIST(b) then
+                                ENTITY.SET_ENTITY_AS_MISSION_ENTITY(b)
+                                script:sleep(100)
+                                ENTITY.DELETE_ENTITY(b)
+                            end
+                        end)
+                    end
+                end
                 if ENTITY.DOES_ENTITY_EXIST(sexPed2) then
                     PED.DELETE_PED(sexPed2)
                 end
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX2)
+                STREAMING.REMOVE_ANIM_DICT(info.dict)
+                STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
             end)
         end
         if ImGui.Button("Spawn") then
@@ -396,7 +424,7 @@ YimActions:add_imgui(function()
             local pedHeading = ENTITY.GET_ENTITY_HEADING(ped)
             local pedForwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
             local pedForwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
-                script.run_in_fiber(function(script)
+                script.run_in_fiber(function()
                 while not STREAMING.HAS_MODEL_LOADED(npcData.hash) do
                     STREAMING.REQUEST_MODEL(npcData.hash)
                     coroutine.yield()
@@ -410,17 +438,15 @@ YimActions:add_imgui(function()
                 RequestControl(npc, npcNetID2, 250)
                 entToNet(npc, npcNetID2)
                 TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, ped, 0.5, 0.5, 0.0, -1, -1, 1.4, true)
-                PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true) --keeps them from acting like pussies and running away.
-                -- TASK.TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true) --complements the previous native but in this case it stops them from following the player.
+                PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true)
+                PED.SET_PED_CONFIG_FLAG(npc, 34, true)
+                PED.SET_PED_CONFIG_FLAG(npc, 35, true)
             end)
         end
         ImGui.SameLine()
         if ImGui.Button("Delete") then
             cleanupNPC()
             script.run_in_fiber(function()
-                if ENTITY.DOES_ENTITY_EXIST(npc) then
-                    PED.DELETE_PED(npc)
-                end
                 for k, v in ipairs(spawned_npcs) do
                     table.remove(spawned_npcs, k)
                     ENTITY.DELETE_ENTITY(v) -- useless
@@ -428,19 +454,23 @@ YimActions:add_imgui(function()
             end)
         end
         if ImGui.Button(" Play On NPC ") then
-            if ENTITY.DOES_ENTITY_EXIST(npc) then
-                local npcCoords = ENTITY.GET_ENTITY_COORDS(npc, false)
-                local npcHeading = ENTITY.GET_ENTITY_HEADING(npc)
-                local npcForwardX = ENTITY.GET_ENTITY_FORWARD_X(npc)
-                local npcForwardY = ENTITY.GET_ENTITY_FORWARD_Y(npc)
-                local npcBoneIndex = PED.GET_PED_BONE_INDEX(npc, info.boneID)
-                local npcBboneCoords = PED.GET_PED_BONE_COORDS(npc, info.boneID)
-                if manualFlags then
-                    setmanualflag()
-                else
-                    flag = info.flag
+            if spawned_npcs[1] ~= nil then
+                for k, v in ipairs(spawned_npcs) do
+                    if ENTITY.DOES_ENTITY_EXIST(v) then
+                        local npcCoords = ENTITY.GET_ENTITY_COORDS(v, false)
+                        local npcHeading = ENTITY.GET_ENTITY_HEADING(v)
+                        local npcForwardX = ENTITY.GET_ENTITY_FORWARD_X(v)
+                        local npcForwardY = ENTITY.GET_ENTITY_FORWARD_Y(v)
+                        local npcBoneIndex = PED.GET_PED_BONE_INDEX(v, info.boneID)
+                        local npcBboneCoords = PED.GET_PED_BONE_COORDS(v, info.boneID)
+                        if manualFlags then
+                            setmanualflag()
+                        else
+                            flag = info.flag
+                        end
+                        playSelected(v, sexPed2, npcBoneIndex, npcCoords, npcHeading, npcForwardX, npcForwardY, npcBboneCoords)
+                    end
                 end
-                playSelected(npc, sexPed2, npcBoneIndex, npcCoords, npcHeading, npcForwardX, npcForwardY, npcBboneCoords)
             else
                 gui.show_error("YimActions", "Spawn an NPC first!")
             end
@@ -884,50 +914,74 @@ end
 script.register_looped("animation hotkey", function(script)
     script:yield()
     if is_playing_anim then
-        if PAD.IS_CONTROL_PRESSED(0, 256) then
-            if PED.IS_PED_IN_ANY_VEHICLE(ped, false) or PED.IS_PED_IN_ANY_VEHICLE(npc, false)  then
-                cleanup()
-                cleanupNPC()
-                local veh = PED.GET_VEHICLE_PED_IS_USING(ped)
-                PED.SET_PED_INTO_VEHICLE(ped, veh, -1)
-                PED.SET_PED_INTO_VEHICLE(npc, veh, 0)
-            else
-                cleanup()
-                cleanupNPC()
-                local current_coords = ENTITY.GET_ENTITY_COORDS(ped)
-                local npc_coords = ENTITY.GET_ENTITY_COORDS(npc)
-                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(ped, current_coords.x, current_coords.y, current_coords.z, true, false, false)
-                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(npc, npc_coords.x, npc_coords.y, npc_coords.z, true, false, false)
+        if spawned_npcs[1] ~= nil then
+            if PAD.IS_CONTROL_PRESSED(0, 256) then
+                for k, v in ipairs(spawned_npcs) do
+                    if PED.IS_PED_IN_ANY_VEHICLE(ped, false) or PED.IS_PED_IN_ANY_VEHICLE(v, false)  then
+                        cleanup()
+                        cleanupNPC()
+                        local veh = PED.GET_VEHICLE_PED_IS_USING(ped)
+                        PED.SET_PED_INTO_VEHICLE(ped, veh, -1)
+                        for rng = 0, 4 do
+                            PED.SET_PED_INTO_VEHICLE(v, veh, rng)
+                        end
+                    else
+                        cleanup()
+                        cleanupNPC()
+                        local current_coords = ENTITY.GET_ENTITY_COORDS(ped)
+                        local npc_coords = ENTITY.GET_ENTITY_COORDS(v)
+                        ENTITY.SET_ENTITY_COORDS_NO_OFFSET(ped, current_coords.x, current_coords.y, current_coords.z, true, false, false)
+                        ENTITY.SET_ENTITY_COORDS_NO_OFFSET(v, npc_coords.x, npc_coords.y, npc_coords.z, true, false, false)
+                    end
+                end
+                is_playing_anim = false
             end
-            is_playing_anim = false
+        else
+            if PAD.IS_CONTROL_PRESSED(0, 256) then
+                cleanup()
+                is_playing_anim = false
+            end
         end
     end
     if usePlayKey and info ~= nil then
         if PAD.IS_CONTROL_PRESSED(0, 317) then
             anim_index = anim_index + 1
             info = filteredAnims[anim_index + 1]
-            gui.show_message("Current Animation:", info.name)
+            if info == nil then
+                anim_index = 0
+                info = filteredAnims[anim_index + 1]
+                gui.show_message("Current Animation:", info.name)
+            end
+            if info ~= nil then
+                gui.show_message("Current Animation:", info.name)
+            end
             script:sleep(200) -- average inter-key interval is about what, 250ms? this should be enough.
         elseif PAD.IS_CONTROL_PRESSED(0, 316) and anim_index > 0 then -- prevent going to index 0 which breaks the script.
             anim_index = anim_index - 1
             info = filteredAnims[anim_index + 1]
             gui.show_message("Current Animation:", info.name)
             script:sleep(200)
+        elseif PAD.IS_CONTROL_PRESSED(0, 316) and anim_index == 0 then
+                info = filteredAnims[anim_index + 1]
+                gui.show_warning("Current Animation:", info.name.."\n\nYou have reached the top of the list.")
+                script:sleep(400)
         end
         if PAD.IS_CONTROL_JUST_PRESSED(0, 187) then
-            local coords = ENTITY.GET_ENTITY_COORDS(ped, false)
-            local heading = ENTITY.GET_ENTITY_HEADING(ped)
-            local forwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
-            local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
-            local boneIndex = PED.GET_PED_BONE_INDEX(ped, info.boneID)
-            local bonecoords = PED.GET_PED_BONE_COORDS(ped, info.boneID)
-            if manualFlags then
-                setmanualflag()
-            else
-                flag = info.flag
+            if info ~= nil then
+                local coords = ENTITY.GET_ENTITY_COORDS(ped, false)
+                local heading = ENTITY.GET_ENTITY_HEADING(ped)
+                local forwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
+                local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
+                local boneIndex = PED.GET_PED_BONE_INDEX(ped, info.boneID)
+                local bonecoords = PED.GET_PED_BONE_COORDS(ped, info.boneID)
+                if manualFlags then
+                    setmanualflag()
+                else
+                    flag = info.flag
+                end
+                playSelected(ped, sexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords)
+                script:yield()
             end
-            playSelected(ped, sexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords)
-            script:yield()
         end
     end
 end)

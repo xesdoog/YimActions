@@ -438,6 +438,7 @@ function playSelected(target, propPed, targetBone, targetCoords, targetHeading, 
                 prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0.0, true, true, true)
                 table.insert(spawned_entities, prop1)
                 ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, target, targetBone, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
+                ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop1)
             end
             while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                 STREAMING.REQUEST_ANIM_DICT(info.dict)
@@ -477,6 +478,7 @@ function playSelected(target, propPed, targetBone, targetCoords, targetHeading, 
                 table.insert(spawned_entities, prop1)
                 ENTITY.SET_ENTITY_HEADING(prop1, targetHeading + info.rotz)
                 OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
+                ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop1)
             end
             while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                 STREAMING.REQUEST_ANIM_DICT(info.dict)
@@ -500,6 +502,7 @@ function playSelected(target, propPed, targetBone, targetCoords, targetHeading, 
                 type4:sleep(20)
                 OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
                 ENTITY.SET_ENTITY_COLLISION(prop1, info.propColl, info.propColl)
+                ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop1)
             end
             while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                 STREAMING.REQUEST_ANIM_DICT(info.dict)
@@ -526,6 +529,7 @@ function playSelected(target, propPed, targetBone, targetCoords, targetHeading, 
                 prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0.0, true, true, false)
                 table.insert(spawned_entities, prop1)
                 ENTITY.ATTACH_ENTITY_TO_ENTITY(prop1, target, targetBone, info.posx, info.posy, info.posz, info.rotx, info.roty, info.rotz, false, false, false, false, 2, true, 1)
+                ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop1)
                 type5:sleep(50)
                 while not STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(info.ptfxdict) do
                     STREAMING.REQUEST_NAMED_PTFX_ASSET(info.ptfxdict)
@@ -554,7 +558,8 @@ function playSelected(target, propPed, targetBone, targetCoords, targetHeading, 
                     end
                     prop2 = OBJECT.CREATE_OBJECT(info.prop2, 0.0, 0.0, 0.0, true, true, false)
                     table.insert(spawned_entities, prop2)
-                    ENTITY.ATTACH_ENTITY_TO_ENTITY(prop2, target, target.GET_PED_BONE_INDEX(target, info.bone2), info.posx2, info.posy2, info.posz2, info.rotx2, info.roty2, info.rotz2, false, false, false, false, 2, true, 1)
+                    ENTITY.ATTACH_ENTITY_TO_ENTITY(prop2, target, PED.GET_PED_BONE_INDEX(target, info.bone2), info.posx2, info.posy2, info.posz2, info.rotx2, info.roty2, info.rotz2, false, false, false, false, 2, true, 1)
+                    ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
                 end
                 while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict) do
                     STREAMING.REQUEST_ANIM_DICT(info.dict)
