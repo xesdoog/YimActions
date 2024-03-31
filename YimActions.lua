@@ -137,7 +137,7 @@ local function setballistic()
             STREAMING.REQUEST_CLIP_SET("anim_group_move_ballistic")
             coroutine.yield()
         end
-        PED.SET_PED_MOVEMENT_CLIPSET(ped, "anim_group_move_ballistic", 1)
+        PED.SET_PED_MOVEMENT_CLIPSET(ped, "anim_group_move_ballistic", 1)           
     end)
 end
 function resetCheckBoxes()
@@ -190,17 +190,18 @@ script.register_looped("follow ped", function(follow)
     for k, v in ipairs(spawned_npcs) do
         if ENTITY.DOES_ENTITY_EXIST(v) then
             if ENTITY.IS_ENTITY_DEAD(v) then
-                follow:sleep(5000)
-                PED.DELETE_PED(v) -- stop trying to put dead monkeys in my car >:[
-                table.remove(spawned_npcs, k)
+                follow:sleep(2000)
+                PED.RESURRECT_PED(v)
+                TASK.CLEAR_PED_TASKS_IMMEDIATELY(v)
+                TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, ped, 0.5, 0.5, 0.0, -1, -1, 1.4, true)
             elseif PED.IS_PED_IN_ANY_VEHICLE(ped, true) and not PED.IS_PED_SITTING_IN_ANY_VEHICLE(v) then
-                local veh = PED.GET_VEHICLE_PED_IS_USING(ped)
+                veh = PED.GET_VEHICLE_PED_IS_USING(ped)
                 if VEHICLE.IS_VEHICLE_SEAT_FREE(veh, 0, 0) then
                     seat = 0
                 else
                     seat = tostring(k)
                 end
-                TASK.CLEAR_PED_TASKS(v)
+                TASK.CLEAR_PED_TASKS_IMMEDIATELY(v)
                 TASK.TASK_ENTER_VEHICLE(v, veh, 20000, seat, 2.0, 16, 0)
                 follow:sleep(2000)
             elseif PED.IS_PED_SITTING_IN_ANY_VEHICLE(v) and not PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
@@ -210,6 +211,10 @@ script.register_looped("follow ped", function(follow)
             end
         end
         follow:yield()
+    end
+    
+    if VEHICLE.IS_THIS_MODEL_A_BIKE(ENTITY.GET_ENTITY_MODEL(veh)) then
+        PED.SET_PED_CONFIG_FLAG(ped, 424, true)
     end
 end)
 YimActions:add_imgui(function()
@@ -420,11 +425,11 @@ YimActions:add_imgui(function()
             end)
         end
         if ImGui.Button("Spawn") then
-            local pedCoords = ENTITY.GET_ENTITY_COORDS(ped, false)
-            local pedHeading = ENTITY.GET_ENTITY_HEADING(ped)
-            local pedForwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
-            local pedForwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
-                script.run_in_fiber(function()
+            script.run_in_fiber(function(script)
+                local pedCoords = ENTITY.GET_ENTITY_COORDS(ped, false)
+                local pedHeading = ENTITY.GET_ENTITY_HEADING(ped)
+                local pedForwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
+                local pedForwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
                 while not STREAMING.HAS_MODEL_LOADED(npcData.hash) do
                     STREAMING.REQUEST_MODEL(npcData.hash)
                     coroutine.yield()
@@ -436,11 +441,10 @@ YimActions:add_imgui(function()
                 table.insert(spawned_npcs, npc)
                 npcNetID2 = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(npc)
                 RequestControl(npc, npcNetID2, 250)
+                script:sleep(500)
                 entToNet(npc, npcNetID2)
                 TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, ped, 0.5, 0.5, 0.0, -1, -1, 1.4, true)
                 PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true)
-                PED.SET_PED_CONFIG_FLAG(npc, 34, true)
-                PED.SET_PED_CONFIG_FLAG(npc, 35, true)
             end)
         end
         ImGui.SameLine()
@@ -449,7 +453,7 @@ YimActions:add_imgui(function()
             script.run_in_fiber(function()
                 for k, v in ipairs(spawned_npcs) do
                     table.remove(spawned_npcs, k)
-                    ENTITY.DELETE_ENTITY(v) -- useless
+                    ENTITY.DELETE_ENTITY(v)
                 end
             end)
         end
@@ -631,7 +635,7 @@ YimActions:add_imgui(function()
             local pedHeading = ENTITY.GET_ENTITY_HEADING(ped)
             local pedForwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
             local pedForwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
-                script.run_in_fiber(function(script)
+            script.run_in_fiber(function(script)
                 while not STREAMING.HAS_MODEL_LOADED(npcData.hash) do
                     STREAMING.REQUEST_MODEL(npcData.hash)
                     coroutine.yield()
@@ -829,6 +833,15 @@ YimActions:add_imgui(function()
         searchBar = true
     end
 end)
+function phoneToEar()
+    script.run_in_fiber(function()
+        while not STREAMING.HAS_ANIM_DICT_LOADED("amb@world_human_stand_mobile@male@standing@call@base") do
+            STREAMING.REQUEST_ANIM_DICT("amb@world_human_stand_mobile@male@standing@call@base")
+            coroutine.yield()
+        end
+        TASK.TASK_PLAY_PHONE_GESTURE_ANIMATION(ped, "amb@world_human_stand_mobile@male@standing@call@base", "base", "BONEMASK_HEADONLY", 4.0, -4.0, true, true)
+    end)
+end
 script.register_looped("side features", function(script)
     script:yield()
     if phoneAnim then
@@ -837,12 +850,13 @@ script.register_looped("side features", function(script)
                 PED.SET_PED_CONFIG_FLAG(ped, 242, false)
                 PED.SET_PED_CONFIG_FLAG(ped, 243, false)
                 PED.SET_PED_CONFIG_FLAG(ped, 244, false)
-            else
-                PED.SET_PED_CONFIG_FLAG(ped, 242, true)
-                PED.SET_PED_CONFIG_FLAG(ped, 243, true)
-                PED.SET_PED_CONFIG_FLAG(ped, 244, true)
+                MOBILE.CELL_SET_INPUT(5)
             end
         end
+    else
+        PED.SET_PED_CONFIG_FLAG(ped, 242, true)
+        PED.SET_PED_CONFIG_FLAG(ped, 243, true)
+        PED.SET_PED_CONFIG_FLAG(ped, 244, true)
     end
     if sprintInside then
         PED.SET_PED_CONFIG_FLAG(ped, 427, true)
@@ -922,9 +936,9 @@ script.register_looped("animation hotkey", function(script)
                         cleanupNPC()
                         local veh = PED.GET_VEHICLE_PED_IS_USING(ped)
                         PED.SET_PED_INTO_VEHICLE(ped, veh, -1)
-                        for rng = 0, 4 do
-                            PED.SET_PED_INTO_VEHICLE(v, veh, rng)
-                        end
+                        -- for rng = 0, 4 do
+                            PED.SET_PED_INTO_VEHICLE(v, veh, 0)
+                        -- end
                     else
                         cleanup()
                         cleanupNPC()
