@@ -31,9 +31,14 @@ local looped = readFromConfig("looped")
 local upperbody = readFromConfig("upperbody")
 local freeze = readFromConfig("freeze")
 local usePlayKey = readFromConfig("usePlayKey")
-script.register_looped("disable game input", function()
+script.register_looped("game input", function()
         if is_typing then
             PAD.DISABLE_ALL_CONTROL_ACTIONS(0)
+        end
+        if PAD.IS_USING_KEYBOARD_AND_MOUSE() then
+            stopButton = "[DEL]"
+        else
+            stopButton = "[X]"
         end
 end)
 local function updatefilteredAnims()
@@ -168,7 +173,6 @@ script.register_looped("playerID", function(playerID)
     else
         ped = spPed
     end
-    info = filteredAnims[anim_index + 1]
     playerID:yield()
 end)
 script.register_looped("Ragdoll Loop", function(script)
@@ -231,6 +235,7 @@ YimActions:add_imgui(function()
     if ImGui.BeginTabItem("Animations") then
         ImGui.PushItemWidth(345)
         displayFilteredAnims()
+        info = filteredAnims[anim_index + 1]
         ImGui.Separator()
         manualFlags, used = ImGui.Checkbox("Edit Flags", manualFlags, true)
         if used then
@@ -980,21 +985,27 @@ script.register_looped("animation hotkey", function(script)
                 gui.show_warning("Current Animation:", info.name.."\n\nYou have reached the top of the list.")
                 script:sleep(400)
         end
-        if PAD.IS_CONTROL_JUST_PRESSED(0, 187) then
-            if info ~= nil then
-                local coords = ENTITY.GET_ENTITY_COORDS(ped, false)
-                local heading = ENTITY.GET_ENTITY_HEADING(ped)
-                local forwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
-                local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
-                local boneIndex = PED.GET_PED_BONE_INDEX(ped, info.boneID)
-                local bonecoords = PED.GET_PED_BONE_COORDS(ped, info.boneID)
-                if manualFlags then
-                    setmanualflag()
-                else
-                    flag = info.flag
+        if PAD.IS_CONTROL_PRESSED(0, 187) then
+            if not is_playing_anim then
+                if info ~= nil then
+                    local coords = ENTITY.GET_ENTITY_COORDS(ped, false)
+                    local heading = ENTITY.GET_ENTITY_HEADING(ped)
+                    local forwardX = ENTITY.GET_ENTITY_FORWARD_X(ped)
+                    local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(ped)
+                    local boneIndex = PED.GET_PED_BONE_INDEX(ped, info.boneID)
+                    local bonecoords = PED.GET_PED_BONE_COORDS(ped, info.boneID)
+                    if manualFlags then
+                        setmanualflag()
+                    else
+                        flag = info.flag
+                    end
+                    playSelected(ped, sexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords)
+                    script:sleep(200)
                 end
-                playSelected(ped, sexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords)
-                script:yield()
+            else
+                PAD.SET_CONTROL_SHAKE(0, 500, 250)
+                gui.show_message("YimActions", "Press "..stopButton.." to stop the current animation before playing the next one.")
+                script:sleep(800)
             end
         end
     end
