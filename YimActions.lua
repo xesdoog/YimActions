@@ -799,7 +799,7 @@ YimActions:add_imgui(function()
             ImGui.SetNextWindowBgAlpha(0.75)
             ImGui.BeginTooltip()
             ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
-            ImGui.TextWrapped("Select an animation from the list then use [Arrow Down] on Keyboard or [Dpad Down] on Controller to play it while the menu is closed. You can also Select the previous/next animation by pressing [PAGE DOWN] to go down the list or [PAGE UP] to go up.\nNOTE: For these hotkeys to work, you have to open YimActions at least once. Browsing the list while the menu is closed is currently not supported for controllers because it conflicts with gameplay controls.")
+            ImGui.TextWrapped("Select an animation from the list then use [LEFT ALT] on Keyboard or [Dpad Down] on Controller to play it while the menu is closed. You can also Select the previous/next animation by pressing [PAGE DOWN] to go down the list or [PAGE UP] to go up.\nNOTE: For these hotkeys to work, you have to open YimActions at least once. Browsing the list while the menu is closed is currently not supported for controllers because it conflicts with gameplay controls.")
             ImGui.PopTextWrapPos()
             coloredText("EXPERIMENTAL: This is the only way to use hotkeys with YimMenu at the moment. This was annoying to implement and it will likely be buggy. If it causes issues for you, disable it from Settings. The stop animation hotkey won't be affected.", {240, 3, 50, 0.8})
             ImGui.EndTooltip()
@@ -978,7 +978,7 @@ script.register_looped("animation hotkey", function(script)
                 gui.show_warning("Current Animation:", info.name.."\n\nYou have reached the top of the list.")
                 script:sleep(400)
         end
-        if PAD.IS_CONTROL_PRESSED(0, 187) then
+        if PAD.IS_CONTROL_PRESSED(0, 19) then
             if not is_playing_anim then
                 if info ~= nil then
                     local coords = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
