@@ -191,6 +191,7 @@ script.register_looped("follow ped", function(follow)
                 PED.RESURRECT_PED(v)
                 TASK.CLEAR_PED_TASKS_IMMEDIATELY(v)
                 TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
+                PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
             elseif PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), true) and not PED.IS_PED_SITTING_IN_ANY_VEHICLE(v) then
                 veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
                 if VEHICLE.IS_VEHICLE_SEAT_FREE(veh, 0, 0) then
@@ -205,6 +206,7 @@ script.register_looped("follow ped", function(follow)
                 TASK.CLEAR_PED_TASKS(v)
                 TASK.TASK_LEAVE_VEHICLE(v, veh, 0)
                 TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
+                PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
             end
         end
         follow:yield()
@@ -398,6 +400,7 @@ YimActions:add_imgui(function()
                 for _, v in ipairs(spawned_npcs) do
                     TASK.CLEAR_PED_TASKS(v)
                     TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
+                    PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
                 end
                 if spawned_entities[1] ~= nil then
                     for _, b in ipairs(spawned_entities) do
@@ -446,14 +449,14 @@ YimActions:add_imgui(function()
             cleanupNPC()
             script.run_in_fiber(function()
                 for k, v in ipairs(spawned_npcs) do
-                    table.remove(spawned_npcs, k)
                     ENTITY.DELETE_ENTITY(v)
+                    table.remove(spawned_npcs, k)
                 end
             end)
         end
         if ImGui.Button(" Play On NPC ") then
             if spawned_npcs[1] ~= nil then
-                for k, v in ipairs(spawned_npcs) do
+                for _, v in ipairs(spawned_npcs) do
                     if ENTITY.DOES_ENTITY_EXIST(v) then
                         local npcCoords = ENTITY.GET_ENTITY_COORDS(v, false)
                         local npcHeading = ENTITY.GET_ENTITY_HEADING(v)
@@ -476,26 +479,24 @@ YimActions:add_imgui(function()
         ImGui.SameLine()
         if ImGui.Button("Stop NPC") then
             cleanupNPC()
-            script.run_in_fiber(function()
-                if PED.IS_PED_IN_ANY_VEHICLE(npc, false) then
-                    local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
-                    PED.SET_PED_INTO_VEHICLE(npc, veh, 0)
-                end
-            end)
+            for _, v in ipairs(spawned_npcs) do
+                script.run_in_fiber(function()
+                    TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
+                    PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
+                    if PED.IS_PED_IN_ANY_VEHICLE(v, false) then
+                        local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
+                        PED.SET_PED_INTO_VEHICLE(v, veh, 0)
+                        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
+                    end
+                end)
+            end
         end
         event.register_handler(menu_event.ScriptsReloaded, function()
             PED.RESET_PED_MOVEMENT_CLIPSET(self.get_ped(), 0.0)
             PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), false)
-            if ENTITY.DOES_ENTITY_EXIST(npc) then
-                PED.DELETE_PED(npc)
-            end
             if is_playing_anim then
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
-                ENTITY.DELETE_ENTITY(prop1)
-                ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop1)
-                ENTITY.DELETE_ENTITY(prop2)
-                ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
                 TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
             -- //fix player clipping through the ground after ending low-positioned anims//
@@ -507,21 +508,30 @@ YimActions:add_imgui(function()
                     ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
                 end
                 is_playing_anim = false
+                if spawned_entities[1] ~= nil then
+                    for _, v in ipairs(spawned_entities) do
+                        if ENTITY.DOES_ENTITY_EXIST(v) then
+                            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
+                            script:sleep(100)
+                            ENTITY.DELETE_ENTITY(v)
+                        end
+                    end
+                end
+            end
+            if spawned_npcs[1] ~= nil then
+                for _, v in ipairs(spawned_npcs) do
+                    if ENTITY.DOES_ENTITY_EXIST(v) then
+                        ENTITY.DELETE_ENTITY(v)
+                    end
+                end
             end
         end)
         event.register_handler(menu_event.MenuUnloaded, function()
             PED.RESET_PED_MOVEMENT_CLIPSET(self.get_ped(), 0.0)
             PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), false)
-            if ENTITY.DOES_ENTITY_EXIST(npc) then
-                PED.DELETE_PED(npc)
-            end
             if is_playing_anim then
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
-                ENTITY.DELETE_ENTITY(prop1)
-                ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop1)
-                ENTITY.DELETE_ENTITY(prop2)
-                ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(prop2)
                 TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
             -- //fix player clipping through the ground after ending low-positioned anims//
@@ -533,6 +543,22 @@ YimActions:add_imgui(function()
                     ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
                 end
                 is_playing_anim = false
+                if spawned_entities[1] ~= nil then
+                    for _, v in ipairs(spawned_entities) do
+                        if ENTITY.DOES_ENTITY_EXIST(v) then
+                            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
+                            script:sleep(100)
+                            ENTITY.DELETE_ENTITY(v)
+                        end
+                    end
+                end
+            end
+            if spawned_npcs[1] ~= nil then
+                for _, v in ipairs(spawned_npcs) do
+                    if ENTITY.DOES_ENTITY_EXIST(v) then
+                        ENTITY.DELETE_ENTITY(v)
+                    end
+                end
             end
         end)
         ImGui.EndTabItem()
@@ -711,6 +737,7 @@ YimActions:add_imgui(function()
                     busyspinner("Stopping scenario...", 3)
                         TASK.CLEAR_PED_TASKS(npc)
                         TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
+                        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true)
                         is_playing_scenario = false
                         script:sleep(1000)
                         HUD.BUSYSPINNER_OFF()
@@ -795,7 +822,7 @@ YimActions:add_imgui(function()
             ImGui.SetNextWindowBgAlpha(0.75)
             ImGui.BeginTooltip()
             ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
-            ImGui.TextWrapped("Select an animation from the list then use [DELETE] on Keyboard or [X] on Controller to play it while the menu is closed. You can also Select the previous/next animation by pressing [PAGE DOWN] to go down the list or [PAGE UP] to go up.\nNOTE: For these hotkeys to work, you have to open YimActions GUI at least once. Browsing the list while the menu is closed is currently not supported for controllers because it conflicts with gameplay controls.")
+            ImGui.TextWrapped("Select an animation from the list then use [DELETE] on Keyboard or [X] on Controller to play it while the menu is closed. You can also select the previous/next animation by pressing [PAGE DOWN] to go down the list and [PAGE UP] to go up.\nNOTE: For these hotkeys to work, you have to open YimActions GUI at least once. Browsing the list while the menu is closed is currently not supported for controller.")
             ImGui.PopTextWrapPos()
             coloredText("EXPERIMENTAL: This is the only way to use hotkeys with YimMenu at the moment. This was annoying to implement and it will likely be buggy. If it causes issues for you, disable it from Settings. The stop animation hotkey won't be affected.", {240, 3, 50, 0.8})
             ImGui.EndTooltip()
@@ -827,15 +854,6 @@ YimActions:add_imgui(function()
         searchBar = true
     end
 end)
-function phoneToEar()
-    script.run_in_fiber(function()
-        while not STREAMING.HAS_ANIM_DICT_LOADED("amb@world_human_stand_mobile@male@standing@call@base") do
-            STREAMING.REQUEST_ANIM_DICT("amb@world_human_stand_mobile@male@standing@call@base")
-            coroutine.yield()
-        end
-        TASK.TASK_PLAY_PHONE_GESTURE_ANIMATION(self.get_ped(), "amb@world_human_stand_mobile@male@standing@call@base", "base", "BONEMASK_HEADONLY", 4.0, -4.0, true, true)
-    end)
-end
 script.register_looped("side features", function(script)
     script:yield()
     if phoneAnim then
@@ -925,14 +943,12 @@ script.register_looped("animation hotkey", function(script)
         if spawned_npcs[1] ~= nil then
             if PAD.IS_CONTROL_PRESSED(0, 47) then
                 for k, v in ipairs(spawned_npcs) do
-                    if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) or PED.IS_PED_IN_ANY_VEHICLE(v, false)  then
-                        cleanup()
-                        cleanupNPC()
+                    if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
                         local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
+                        cleanup()
                         PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, -1)
-                        -- for rng = 0, 4 do
-                            PED.SET_PED_INTO_VEHICLE(v, veh, 0)
-                        -- end
+                        cleanupNPC()
+                        PED.SET_PED_INTO_VEHICLE(v, veh, 0)
                     else
                         cleanup()
                         cleanupNPC()
@@ -940,6 +956,8 @@ script.register_looped("animation hotkey", function(script)
                         local npc_coords = ENTITY.GET_ENTITY_COORDS(v)
                         ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
                         ENTITY.SET_ENTITY_COORDS_NO_OFFSET(v, npc_coords.x, npc_coords.y, npc_coords.z, true, false, false)
+                        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
+                        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
                     end
                 end
                 is_playing_anim = false
