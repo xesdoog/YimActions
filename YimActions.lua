@@ -8,6 +8,7 @@ local npc_index = 0
 local switch = 0
 local filteredAnims = {}
 local filteredScenarios = {}
+local favorites = {}
 local searchQuery = ""
 local is_typing = false
 local searchBar = true
@@ -160,14 +161,6 @@ function resetCheckBoxes()
     freeze = false
     usePlayKey = false
 end
-script.register_looped("onlineStatus", function(onlineStatus)
-    if NETWORK.NETWORK_IS_SESSION_ACTIVE() then
-        is_online = true
-    else
-        is_online = false
-    end
-    onlineStatus:yield()
-end)
 script.register_looped("Ragdoll Loop", function(script)
     script:yield()
     if clumsy then
@@ -210,10 +203,6 @@ script.register_looped("follow ped", function(follow)
             end
         end
         follow:yield()
-    end
-    
-    if VEHICLE.IS_THIS_MODEL_A_BIKE(ENTITY.GET_ENTITY_MODEL(veh)) then
-        PED.SET_PED_CONFIG_FLAG(self.get_ped(), 424, true)
     end
 end)
 YimActions:add_imgui(function()
@@ -347,6 +336,10 @@ YimActions:add_imgui(function()
             end
         end
         widgetToolTip(false, "Detaches any attached or stuck props/peds.\n(Only works on attachments from this script)")
+        -- if ImGui.Button("Add To Favorites") then
+        --     table.insert(favorites, info)
+        --     save_favorites()
+        -- end
         ImGui.Separator()
         ImGui.Text("Ragdoll Options:")
         ImGui.Spacing()
@@ -817,15 +810,17 @@ YimActions:add_imgui(function()
         if used then
             saveToConfig("usePlayKey", usePlayKey)
         end
-        ImGui.SameLine(); ImGui.TextDisabled("(?)")
-        if ImGui.IsItemHovered() then
-            ImGui.SetNextWindowBgAlpha(0.75)
-            ImGui.BeginTooltip()
-            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
-            ImGui.TextWrapped("Select an animation from the list then use [DELETE] on Keyboard or [X] on Controller to play it while the menu is closed. You can also select the previous/next animation by pressing [PAGE DOWN] to go down the list and [PAGE UP] to go up.\nNOTE: For these hotkeys to work, you have to open YimActions GUI at least once. Browsing the list while the menu is closed is currently not supported for controller.")
-            ImGui.PopTextWrapPos()
-            coloredText("EXPERIMENTAL: This is the only way to use hotkeys with YimMenu at the moment. This was annoying to implement and it will likely be buggy. If it causes issues for you, disable it from Settings. The stop animation hotkey won't be affected.", {240, 3, 50, 0.8})
-            ImGui.EndTooltip()
+        if not disableTooltips then
+            ImGui.SameLine(); ImGui.TextDisabled("(?)")
+            if ImGui.IsItemHovered() then
+                ImGui.SetNextWindowBgAlpha(0.75)
+                ImGui.BeginTooltip()
+                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
+                ImGui.TextWrapped("Select an animation from the list then use [DELETE] on Keyboard or [X] on Controller to play it while the menu is closed. You can also select the previous/next animation by pressing [PAGE DOWN] to go down the list and [PAGE UP] to go up.\nNOTE: For these hotkeys to work, you have to open YimActions GUI at least once. Browsing the list while the menu is closed is currently not supported for controller.")
+                ImGui.PopTextWrapPos()
+                coloredText("EXPERIMENTAL: This is the only way to use hotkeys with YimMenu at the moment. This was annoying to implement and it will likely be buggy. If it causes issues for you, disable it from Settings.\n(The 'stop animation' hotkey won't be affected)", {240, 3, 50, 0.8})
+                ImGui.EndTooltip()
+            end
         end
         ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing()
         ImGui.Separator()
@@ -856,19 +851,13 @@ YimActions:add_imgui(function()
 end)
 script.register_looped("side features", function(script)
     script:yield()
-    if phoneAnim then
-        if is_online then
-            if not ENTITY.IS_ENTITY_DEAD(self.get_ped()) then
-                PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, false)
-                PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, false)
-                PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, false)
-                MOBILE.CELL_SET_INPUT(5)
-            end
+    if phoneAnim and NETWORK.NETWORK_IS_SESSION_ACTIVE() then
+        if not ENTITY.IS_ENTITY_DEAD(self.get_ped()) then
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, false)
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, false)
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, false)
+            MOBILE.CELL_SET_INPUT(5)
         end
-    else
-        PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, true)
-        PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, true)
-        PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, true)
     end
     if sprintInside then
         PED.SET_PED_CONFIG_FLAG(self.get_ped(), 427, true)
