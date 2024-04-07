@@ -16,7 +16,8 @@ local x = 0
 local counter = 0
 local clumsy = false
 local rod = false
-spawned_entities = {}
+plyrProps = {}
+npcProps = {}
 spawned_npcs = {}
 is_playing_anim = false
 is_playing_scenario = false
@@ -260,14 +261,14 @@ YimActions:add_imgui(function()
         function cleanup()
             script.run_in_fiber(function()
                 TASK.CLEAR_PED_TASKS(self.get_ped())
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(selfloopedFX)
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-                if ENTITY.DOES_ENTITY_EXIST(sexPed) then
-                    PED.DELETE_PED(sexPed)
+                if ENTITY.DOES_ENTITY_EXIST(selfSexPed) then
+                    PED.DELETE_PED(selfSexPed)
                 end
-                if spawned_entities[1] ~= nil then
-                    for _, v in ipairs(spawned_entities) do
+                if plyrProps[1] ~= nil then
+                    for _, v in ipairs(plyrProps) do
                         script.run_in_fiber(function(script)
                             if ENTITY.DOES_ENTITY_EXIST(v) then
                                 ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
@@ -291,7 +292,7 @@ YimActions:add_imgui(function()
             else
                 flag = info.flag
             end
-            playSelected(self.get_ped(), sexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords)
+            playSelected(self.get_ped(), selfprop1, selfprop2, selfloopedFX, selfSexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords, "self", plyrProps)
             is_playing_anim = true
         end
         ImGui.SameLine()
@@ -310,14 +311,14 @@ YimActions:add_imgui(function()
         widgetToolTip(false, "TIP: You can also stop animations by pressing [G] on keyboard or [DPAD LEFT] on controller.")
         ImGui.SameLine()
         local errCol = {}
-        if spawned_entities[1] ~= nil then
+        if plyrProps[1] ~= nil then
             errCol = {104, 247, 114, 0.2}
         else
             errCol = {225, 0, 0, 0.5}
         end
         if Button("Remove Attachments", {104, 247, 114, 0.6}, {104, 247, 114, 0.5}, errCol) then
-            if spawned_entities[1] ~= nil then
-                for k, v in ipairs(spawned_entities) do
+            if plyrProps[1] ~= nil then
+                for k, v in ipairs(plyrProps) do
                     script.run_in_fiber(function()
                         if ENTITY.DOES_ENTITY_EXIST(v) then
                             ENTITY.DETACH_ENTITY(v)
@@ -325,11 +326,11 @@ YimActions:add_imgui(function()
                             TASK.CLEAR_PED_TASKS(self.get_ped())
                             TASK.CLEAR_PED_TASKS(npc)
                             TASK.CLEAR_PED_TASKS(sexPed)
-                            TASK.CLEAR_PED_TASKS(sexPed2)
+                            TASK.CLEAR_PED_TASKS(npcSexPed)
                             is_playing_anim = false
                         end
                     end)
-                    table.remove(spawned_entities, k)
+                    table.remove(plyrProps, k)
                 end
             else
                 gui.show_error("YimActions", "There are no attachments to remove!")
@@ -395,8 +396,8 @@ YimActions:add_imgui(function()
                     TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
                     PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
                 end
-                if spawned_entities[1] ~= nil then
-                    for _, b in ipairs(spawned_entities) do
+                if npcProps[1] ~= nil then
+                    for _, b in ipairs(npcProps) do
                         script.run_in_fiber(function(script)
                             if ENTITY.DOES_ENTITY_EXIST(b) then
                                 ENTITY.SET_ENTITY_AS_MISSION_ENTITY(b)
@@ -406,10 +407,10 @@ YimActions:add_imgui(function()
                         end)
                     end
                 end
-                if ENTITY.DOES_ENTITY_EXIST(sexPed2) then
-                    PED.DELETE_PED(sexPed2)
+                if ENTITY.DOES_ENTITY_EXIST(npcSexPed) then
+                    PED.DELETE_PED(npcSexPed)
                 end
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX2)
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(npcloopedFX2)
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
             end)
@@ -462,7 +463,7 @@ YimActions:add_imgui(function()
                         else
                             flag = info.flag
                         end
-                        playSelected(v, sexPed2, npcBoneIndex, npcCoords, npcHeading, npcForwardX, npcForwardY, npcBboneCoords)
+                        playSelected(v, npcprop1, npcprop2, npcloopedFX, npcSexPed, npcBoneIndex, npcCoords, npcHeading, npcForwardX, npcForwardY, npcBboneCoords, "npc", npcProps)
                     end
                 end
             else
@@ -489,7 +490,8 @@ YimActions:add_imgui(function()
             PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), false)
             if is_playing_anim then
                 TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(selfloopedFX)
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(npcloopedFX)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
             -- //fix player clipping through the ground after ending low-positioned anims//
@@ -501,8 +503,8 @@ YimActions:add_imgui(function()
                     ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
                 end
                 is_playing_anim = false
-                if spawned_entities[1] ~= nil then
-                    for _, v in ipairs(spawned_entities) do
+                if plyrProps[1] ~= nil then
+                    for _, v in ipairs(plyrProps) do
                         if ENTITY.DOES_ENTITY_EXIST(v) then
                             ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
                             script:sleep(100)
@@ -524,7 +526,8 @@ YimActions:add_imgui(function()
             PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), false)
             if is_playing_anim then
                 TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(selfloopedFX)
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(npcloopedFX)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
             -- //fix player clipping through the ground after ending low-positioned anims//
@@ -536,8 +539,8 @@ YimActions:add_imgui(function()
                     ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
                 end
                 is_playing_anim = false
-                if spawned_entities[1] ~= nil then
-                    for _, v in ipairs(spawned_entities) do
+                if plyrProps[1] ~= nil then
+                    for _, v in ipairs(plyrProps) do
                         if ENTITY.DOES_ENTITY_EXIST(v) then
                             ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
                             script:sleep(100)
@@ -578,17 +581,9 @@ YimActions:add_imgui(function()
         ImGui.Separator()
         if ImGui.Button("   Play    ") then
             if is_playing_anim then
-                script.run_in_fiber(function()
-                    TASK.CLEAR_PED_TASKS(self.get_ped())
-                    ENTITY.DELETE_ENTITY(prop1)
-                    ENTITY.DELETE_ENTITY(prop2)
-                    GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
-                    if ENTITY.DOES_ENTITY_EXIST(sexPed) then
-                        PED.DELETE_PED(sexPed)
-                    end
-                end)
+                cleanup()
             end
-            local data = filteredScenarios[scenario_index+1]
+            local data = filteredScenarios[scenario_index + 1]
             local coords = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
             local heading = ENTITY.GET_ENTITY_HEADING(self.get_ped())
             local forwardX = ENTITY.GET_ENTITY_FORWARD_X(self.get_ped())
@@ -681,15 +676,7 @@ YimActions:add_imgui(function()
         if ImGui.Button(" Play On NPC ") then
             if ENTITY.DOES_ENTITY_EXIST(npc) then
                 if is_playing_anim then
-                    script.run_in_fiber(function()
-                        TASK.CLEAR_PED_TASKS(npc)
-                        ENTITY.DELETE_ENTITY(prop1)
-                        ENTITY.DELETE_ENTITY(prop2)
-                        GRAPHICS.STOP_PARTICLE_FX_LOOPED(loopedFX)
-                        if ENTITY.DOES_ENTITY_EXIST(sexPed) then
-                            PED.DELETE_PED(sexPed)
-                        end
-                    end)
+                    cleanupNPC()
                 end
                 local data = filteredScenarios[scenario_index+1]
                 local npcCoords = ENTITY.GET_ENTITY_COORDS(npc, false)
@@ -995,7 +982,7 @@ script.register_looped("animation hotkey", function(script)
                     else
                         flag = info.flag
                     end
-                    playSelected(self.get_ped(), sexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords)
+                    playSelected(self.get_ped(), selfprop1, selfprop2, selfloopedFX, selfSexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords, "self", plyrProps)
                     script:sleep(200)
                 end
             else
