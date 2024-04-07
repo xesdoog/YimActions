@@ -515,7 +515,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
                 end
                 prop1 = OBJECT.CREATE_OBJECT(info.prop1, 0.0, 0.0, 0.0, true, true, false)
                 table.insert(propTable, prop1)
-                ENTITY.SET_ENTITY_Coords(prop1, targetBoneCoords.x + info.posx, targetBoneCoords.y + info.posy, targetBoneCoords.z + info.posz)
+                ENTITY.SET_ENTITY_COORDS(prop1, targetBoneCoords.x + info.posx, targetBoneCoords.y + info.posy, targetBoneCoords.z + info.posz)
                 type4:sleep(20)
                 OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(prop1)
                 ENTITY.SET_ENTITY_COLLISION(prop1, info.propColl, info.propColl)
