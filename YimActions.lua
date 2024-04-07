@@ -37,9 +37,9 @@ script.register_looped("game input", function()
             PAD.DISABLE_ALL_CONTROL_ACTIONS(0)
         end
         if PAD.IS_USING_KEYBOARD_AND_MOUSE() then
-            stopButton = "[DEL]"
+            stopButton = "[G]"
         else
-            stopButton = "[X]"
+            stopButton = "[DPAD LEFT]"
         end
 end)
 local function updatefilteredAnims()
