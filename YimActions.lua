@@ -269,7 +269,7 @@ YimActions:add_imgui(function()
                     PED.DELETE_PED(selfSexPed)
                 end
                 if plyrProps[1] ~= nil then
-                    for _, v in ipairs(plyrProps) do
+                    for k, v in ipairs(plyrProps) do
                         script.run_in_fiber(function(script)
                             if ENTITY.DOES_ENTITY_EXIST(v) then
                                 ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
@@ -277,6 +277,7 @@ YimActions:add_imgui(function()
                                 ENTITY.DELETE_ENTITY(v)
                             end
                         end)
+                        table.remove(plyrProps, k)
                     end
                 end
                 if selfPTFX[1] ~= nil then
@@ -406,14 +407,15 @@ YimActions:add_imgui(function()
                     PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
                 end
                 if npcProps[1] ~= nil then
-                    for _, b in ipairs(npcProps) do
+                    for k, v in ipairs(npcProps) do
                         script.run_in_fiber(function(script)
-                            if ENTITY.DOES_ENTITY_EXIST(b) then
-                                ENTITY.SET_ENTITY_AS_MISSION_ENTITY(b)
+                            if ENTITY.DOES_ENTITY_EXIST(v) then
+                                ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
                                 script:sleep(100)
-                                ENTITY.DELETE_ENTITY(b)
+                                ENTITY.DELETE_ENTITY(v)
                             end
                         end)
+                        table.remove(npcProps, k)
                     end
                 end
                 if ENTITY.DOES_ENTITY_EXIST(npcSexPed) then
@@ -459,7 +461,9 @@ YimActions:add_imgui(function()
             cleanupNPC()
             script.run_in_fiber(function()
                 for k, v in ipairs(spawned_npcs) do
-                    ENTITY.DELETE_ENTITY(v)
+                    if ENTITY.DOES_ENTITY_EXIST(v) then
+                        ENTITY.DELETE_ENTITY(v)
+                    end
                     table.remove(spawned_npcs, k)
                 end
             end)
@@ -524,21 +528,23 @@ YimActions:add_imgui(function()
                 end
                 is_playing_anim = false
                 if plyrProps[1] ~= nil then
-                    for _, v in ipairs(plyrProps) do
+                    for k, v in ipairs(plyrProps) do
                         if ENTITY.DOES_ENTITY_EXIST(v) then
                             ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
                             script:sleep(100)
                             ENTITY.DELETE_ENTITY(v)
                         end
+                        table.remove(plyrProps, k)
                     end
                 end
             end
             if spawned_npcs[1] ~= nil then
                 cleanupNPC()
-                for _, v in ipairs(spawned_npcs) do
+                for k, v in ipairs(spawned_npcs) do
                     if ENTITY.DOES_ENTITY_EXIST(v) then
                         ENTITY.DELETE_ENTITY(v)
                     end
+                    table.remove(plyrProps, k)
                 end
             end
         end)
@@ -565,20 +571,22 @@ YimActions:add_imgui(function()
                 end
                 is_playing_anim = false
                 if plyrProps[1] ~= nil then
-                    for _, v in ipairs(plyrProps) do
+                    for k, v in ipairs(plyrProps) do
                         if ENTITY.DOES_ENTITY_EXIST(v) then
                             ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
                             script:sleep(100)
                             ENTITY.DELETE_ENTITY(v)
                         end
+                        table.remove(plyrProps, k)
                     end
                 end
             end
             if spawned_npcs[1] ~= nil then
-                for _, v in ipairs(spawned_npcs) do
+                for k, v in ipairs(spawned_npcs) do
                     if ENTITY.DOES_ENTITY_EXIST(v) then
                         ENTITY.DELETE_ENTITY(v)
                     end
+                    table.remove(spawned_npcs, k)
                 end
             end
         end)
@@ -693,69 +701,72 @@ YimActions:add_imgui(function()
                     PED.DELETE_PED(npc)
                 end
                 for k, v in ipairs(spawned_npcs) do
+                    if ENTITY.DOES_ENTITY_EXIST(v) then
+                        ENTITY.DELETE_ENTITY(v)
+                    end
                     table.remove(spawned_npcs, k)
-                    ENTITY.DELETE_ENTITY(v) -- useless
                 end
             end)
         end
         if ImGui.Button(" Play On NPC ") then
-            if ENTITY.DOES_ENTITY_EXIST(npc) then
+            if spawned_npcs[1] ~= nil then
                 if is_playing_anim then
                     cleanupNPC()
                 end
                 local data = filteredScenarios[scenario_index+1]
-                local npcCoords = ENTITY.GET_ENTITY_COORDS(npc, false)
-                local npcHeading = ENTITY.GET_ENTITY_HEADING(npc)
-                local npcForwardX = ENTITY.GET_ENTITY_FORWARD_X(npc)
-                local npcForwardY = ENTITY.GET_ENTITY_FORWARD_Y(npc)
-                if data.name == "Cook On BBQ" then
-                    script.run_in_fiber(function()
-                        while not STREAMING.HAS_MODEL_LOADED(286252949) do
-                            STREAMING.REQUEST_MODEL(286252949)
-                            coroutine.yield()
-                        end
-                        bbq = OBJECT.CREATE_OBJECT(286252949, npcCoords.x + (npcForwardX), npcCoords.y + (npcForwardY), npcCoords.z, true, true, false)
-                        ENTITY.SET_ENTITY_HEADING(bbq, npcHeading)
-                        OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(bbq)
-                        TASK.CLEAR_PED_TASKS_IMMEDIATELY(npc)
-                        TASK.TASK_START_SCENARIO_IN_PLACE(npc, data.scenario, -1, true)
-                        is_playing_scenario = true
-                    end)
-                else
-                    script.run_in_fiber(function()
-                        TASK.CLEAR_PED_TASKS_IMMEDIATELY(npc)
-                        TASK.TASK_START_SCENARIO_IN_PLACE(npc, data.scenario, -1, true)
-                        is_playing_scenario = true
-                        if ENTITY.DOES_ENTITY_EXIST(bbq) then
-                            ENTITY.DELETE_ENTITY(bbq)
-                        end
-                    end)
+                for _, v in ipairs(spawned_npcs) do
+                    local npcCoords = ENTITY.GET_ENTITY_COORDS(v, false)
+                    local npcHeading = ENTITY.GET_ENTITY_HEADING(v)
+                    local npcForwardX = ENTITY.GET_ENTITY_FORWARD_X(v)
+                    local npcForwardY = ENTITY.GET_ENTITY_FORWARD_Y(v)
+                    if data.name == "Cook On BBQ" then
+                        script.run_in_fiber(function()
+                            while not STREAMING.HAS_MODEL_LOADED(286252949) do
+                                STREAMING.REQUEST_MODEL(286252949)
+                                coroutine.yield()
+                            end
+                            bbq = OBJECT.CREATE_OBJECT(286252949, npcCoords.x + (npcForwardX), npcCoords.y + (npcForwardY), npcCoords.z, true, true, false)
+                            ENTITY.SET_ENTITY_HEADING(bbq, npcHeading)
+                            OBJECT.PLACE_OBJECT_ON_GROUND_PROPERLY(bbq)
+                            TASK.CLEAR_PED_TASKS_IMMEDIATELY(v)
+                            TASK.TASK_START_SCENARIO_IN_PLACE(v, data.scenario, -1, true)
+                            is_playing_scenario = true
+                        end)
+                    else
+                        script.run_in_fiber(function()
+                            TASK.CLEAR_PED_TASKS_IMMEDIATELY(v)
+                            TASK.TASK_START_SCENARIO_IN_PLACE(v, data.scenario, -1, true)
+                            is_playing_scenario = true
+                            if ENTITY.DOES_ENTITY_EXIST(bbq) then
+                                ENTITY.DELETE_ENTITY(bbq)
+                            end
+                        end)
+                    end
                 end
             else
                 gui.show_error("YimActions", "Spawn an NPC first!")
             end
         end
         ImGui.SameLine()
-        if ImGui.Button("  Stop   ") then
+        if ImGui.Button("Stop NPC") then
             if is_playing_scenario then
                 script.run_in_fiber(function(script)
                     busyspinner("Stopping scenario...", 3)
-                        TASK.CLEAR_PED_TASKS(npc)
-                        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
-                        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true)
-                        is_playing_scenario = false
-                        script:sleep(1000)
-                        HUD.BUSYSPINNER_OFF()
+                    for _, v in ipairs(spawned_npcs) do
+                        TASK.CLEAR_PED_TASKS(v)
+                        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
+                        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
+                    end
+                    is_playing_scenario = false
                     if ENTITY.DOES_ENTITY_EXIST(bbq) then
                         ENTITY.DELETE_ENTITY(bbq)
                     end
+                    script:sleep(800)
+                    HUD.BUSYSPINNER_OFF()
                 end)
             end
         end
         event.register_handler(menu_event.ScriptsReloaded, function()
-            if ENTITY.DOES_ENTITY_EXIST(npc) then
-                PED.DELETE_PED(npc)
-            end
             if is_playing_scenario then
                 TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
                 TASK.CLEAR_PED_TASKS_IMMEDIATELY(npc)
@@ -763,18 +774,30 @@ YimActions:add_imgui(function()
                 if ENTITY.DOES_ENTITY_EXIST(bbq) then
                     ENTITY.DELETE_ENTITY(bbq)
                 end
+                if spawned_npcs[1] ~= nil then
+                    for k, v in ipairs(spawned_npcs) do
+                        if ENTITY.DOES_ENTITY_EXIST(v) then
+                            ENTITY.DELETE_ENTITY(v)
+                        end
+                        table.remove(spawned_npcs, k)
+                    end
+                end
             end
         end)
         event.register_handler(menu_event.MenuUnloaded, function()
-            if ENTITY.DOES_ENTITY_EXIST(npc) then
-                PED.DELETE_PED(npc)
-            end
             if is_playing_scenario then
                 TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
-                TASK.CLEAR_PED_TASKS_IMMEDIATELY(npc)
                 is_playing_scenario = false
                 if ENTITY.DOES_ENTITY_EXIST(bbq) then
                     ENTITY.DELETE_ENTITY(bbq)
+                end
+                if spawned_npcs[1] ~= nil then
+                    for k, v in ipairs(spawned_npcs) do
+                        if ENTITY.DOES_ENTITY_EXIST(v) then
+                            ENTITY.DELETE_ENTITY(v)
+                        end
+                        table.remove(spawned_npcs, k)
+                    end
                 end
             end
         end)
@@ -889,9 +912,12 @@ script.register_looped("scenario hotkey", function(hotkey)
             script.run_in_fiber(function(script)
                 busyspinner("Stopping scenario...", 3)
                 TASK.CLEAR_PED_TASKS(self.get_ped())
-                TASK.CLEAR_PED_TASKS(npc)
-                TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
-                script:sleep(1000)
+                for _, v in ipairs(spawned_npcs) do
+                    TASK.CLEAR_PED_TASKS(v)
+                    TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
+                    PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
+                end
+                script:sleep(800)
                 HUD.BUSYSPINNER_OFF()
                 if ENTITY.DOES_ENTITY_EXIST(bbq) then
                     ENTITY.DELETE_ENTITY(bbq)
