@@ -426,7 +426,7 @@ function entToNet(entity, netID)
     end)
 end
 
-function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targetCoords, targetHeading, targetForwardX, targetForwardY, targetBoneCoords, ent, propTable)
+function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targetCoords, targetHeading, targetForwardX, targetForwardY, targetBoneCoords, ent, propTable, ptfxTable)
     if info.type == 1 then
       if ent == "self" then
         cleanup()
@@ -473,6 +473,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
             type2:sleep(info.ptfxdelay)
             GRAPHICS.USE_PARTICLE_FX_ASSET(info.ptfxdict)
             loopedFX = GRAPHICS.START_NETWORKED_PARTICLE_FX_LOOPED_ON_ENTITY_BONE(info.ptfxname, target, info.ptfxOffx, info.ptfxOffy, info.ptfxOffz, info.ptfxrotx, info.ptfxroty, info.ptfxrotz, targetBone, info.ptfxscale, false, false, false, 0, 0, 0, 0)
+            table.insert(ptfxTable, loopedFX)
         end)
     elseif info.type == 3 then
       if ent == "self" then

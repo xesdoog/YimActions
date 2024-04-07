@@ -18,6 +18,8 @@ local clumsy = false
 local rod = false
 plyrProps = {}
 npcProps = {}
+selfPTFX = {}
+npcPTFX = {}
 spawned_npcs = {}
 is_playing_anim = false
 is_playing_scenario = false
@@ -261,7 +263,6 @@ YimActions:add_imgui(function()
         function cleanup()
             script.run_in_fiber(function()
                 TASK.CLEAR_PED_TASKS(self.get_ped())
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(selfloopedFX)
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
                 if ENTITY.DOES_ENTITY_EXIST(selfSexPed) then
@@ -278,6 +279,14 @@ YimActions:add_imgui(function()
                         end)
                     end
                 end
+                if selfPTFX[1] ~= nil then
+                    for k, v in ipairs(selfPTFX) do
+                        script.run_in_fiber(function()
+                            GRAPHICS.STOP_PARTICLE_FX_LOOPED(v)
+                        end)
+                        table.remove(selfPTFX, k)
+                    end
+                end
             end)
         end
         if ImGui.Button("   Play   ") then
@@ -292,7 +301,7 @@ YimActions:add_imgui(function()
             else
                 flag = info.flag
             end
-            playSelected(self.get_ped(), selfprop1, selfprop2, selfloopedFX, selfSexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords, "self", plyrProps)
+            playSelected(self.get_ped(), selfprop1, selfprop2, selfloopedFX, selfSexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords, "self", plyrProps, selfPTFX)
             is_playing_anim = true
         end
         ImGui.SameLine()
@@ -410,7 +419,14 @@ YimActions:add_imgui(function()
                 if ENTITY.DOES_ENTITY_EXIST(npcSexPed) then
                     PED.DELETE_PED(npcSexPed)
                 end
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(npcloopedFX2)
+                if npcPTFX[1] ~= nil then
+                    for key, value in ipairs(npcPTFX) do
+                        script.run_in_fiber(function()
+                            GRAPHICS.STOP_PARTICLE_FX_LOOPED(value)
+                        end)
+                        table.remove(npcPTFX, key)
+                    end
+                end
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
             end)
@@ -463,7 +479,7 @@ YimActions:add_imgui(function()
                         else
                             flag = info.flag
                         end
-                        playSelected(v, npcprop1, npcprop2, npcloopedFX, npcSexPed, npcBoneIndex, npcCoords, npcHeading, npcForwardX, npcForwardY, npcBboneCoords, "npc", npcProps)
+                        playSelected(v, npcprop1, npcprop2, npcloopedFX, npcSexPed, npcBoneIndex, npcCoords, npcHeading, npcForwardX, npcForwardY, npcBboneCoords, "npc", npcProps, npcPTFX)
                     end
                 end
             else
@@ -490,10 +506,14 @@ YimActions:add_imgui(function()
             PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), false)
             if is_playing_anim then
                 TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(selfloopedFX)
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(npcloopedFX)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
+                if selfPTFX ~= nil then
+                    for k, v in ipairs(selfPTFX) do
+                        GRAPHICS.STOP_PARTICLE_FX_LOOPED(v)
+                        table.remove(selfPTFX, k)
+                    end
+                end
             -- //fix player clipping through the ground after ending low-positioned anims//
                 local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
                 if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
@@ -514,6 +534,7 @@ YimActions:add_imgui(function()
                 end
             end
             if spawned_npcs[1] ~= nil then
+                cleanupNPC()
                 for _, v in ipairs(spawned_npcs) do
                     if ENTITY.DOES_ENTITY_EXIST(v) then
                         ENTITY.DELETE_ENTITY(v)
@@ -526,10 +547,14 @@ YimActions:add_imgui(function()
             PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), false)
             if is_playing_anim then
                 TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(selfloopedFX)
-                GRAPHICS.STOP_PARTICLE_FX_LOOPED(npcloopedFX)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
+                if selfPTFX ~= nil then
+                    for k, v in ipairs(selfPTFX) do
+                        GRAPHICS.STOP_PARTICLE_FX_LOOPED(v)
+                        table.remove(selfPTFX, k)
+                    end
+                end
             -- //fix player clipping through the ground after ending low-positioned anims//
                 local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
                 if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
@@ -982,7 +1007,7 @@ script.register_looped("animation hotkey", function(script)
                     else
                         flag = info.flag
                     end
-                    playSelected(self.get_ped(), selfprop1, selfprop2, selfloopedFX, selfSexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords, "self", plyrProps)
+                    playSelected(self.get_ped(), selfprop1, selfprop2, selfloopedFX, selfSexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords, "self", plyrProps, selfPTFX)
                     script:sleep(200)
                 end
             else
