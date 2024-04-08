@@ -13,7 +13,9 @@
 ## Setup:
 
 1. Go to the [Releases](https://github.com/xesdoog/YimActions/releases) tab and download the latest version of YimActions.
-2. Unzip the archive and place both **YimActions.lua** and **animdata.lua** in YimMenu's scripts folder which is located at **%AppData%\YimMenu\scripts**
+2. Unzip the archive and place both **YimActions.lua** and **animdata.lua** in YimMenu's scripts folder which is located at:
+######
+    %AppData%\YimMenu\scripts
 
 ## Usage:
 
