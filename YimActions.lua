@@ -327,26 +327,30 @@ YimActions:add_imgui(function()
             errCol = {225, 0, 0, 0.5}
         end
         if Button("Remove Attachments", {104, 247, 114, 0.6}, {104, 247, 114, 0.5}, errCol) then
-            if plyrProps[1] ~= nil then
-                for k, v in ipairs(plyrProps) do
-                    script.run_in_fiber(function()
-                        if ENTITY.DOES_ENTITY_EXIST(v) then
-                            ENTITY.DETACH_ENTITY(v)
-                            ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(v)
+            all_objects = entities.get_all_objects_as_handles()
+            for _, v in ipairs(all_objects) do
+                script.run_in_fiber(function(detach)
+                    modelHash = ENTITY.GET_ENTITY_MODEL(v)
+                    attachment = ENTITY.GET_ENTITY_OF_TYPE_ATTACHED_TO_ENTITY(self.get_ped(), modelHash)
+                        if ENTITY.DOES_ENTITY_EXIST(attachment) then
+                            ENTITY.DETACH_ENTITY(attachment)
+                            ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(attachment)
                             TASK.CLEAR_PED_TASKS(self.get_ped())
-                            TASK.CLEAR_PED_TASKS(npc)
                             TASK.CLEAR_PED_TASKS(sexPed)
-                            TASK.CLEAR_PED_TASKS(npcSexPed)
                             is_playing_anim = false
                         end
-                    end)
-                    table.remove(plyrProps, k)
-                end
-            else
+                end)
+            end
+            if attachment == nil then
                 gui.show_error("YimActions", "There are no attachments to remove!")
             end
+            if plyrProps[1] ~= nil then
+                for k, _ in ipairs(plyrProps) do
+                    table.remove(plyrProps, k)
+                end
+            end
         end
-        widgetToolTip(false, "Detaches any attached or stuck props/peds.\n(Only works on attachments from this script)")
+        widgetToolTip(false, "Detaches all props.")
         -- if ImGui.Button("Add To Favorites") then
         --     table.insert(favorites, info)
         --     save_favorites()
