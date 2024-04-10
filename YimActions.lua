@@ -265,12 +265,12 @@ YimActions:add_imgui(function()
                 TASK.CLEAR_PED_TASKS(self.get_ped())
                 STREAMING.REMOVE_ANIM_DICT(info.dict)
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-                if ENTITY.DOES_ENTITY_EXIST(selfSexPed) then
-                    PED.DELETE_PED(selfSexPed)
-                end
                 if plyrProps[1] ~= nil then
                     for k, v in ipairs(plyrProps) do
                         script.run_in_fiber(function(script)
+                            if ENTITY.DOES_ENTITY_EXIST(v) then
+                                PED.DELETE_PED(v)
+                            end
                             if ENTITY.DOES_ENTITY_EXIST(v) then
                                 ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
                                 script:sleep(100)
@@ -327,26 +327,41 @@ YimActions:add_imgui(function()
             errCol = {225, 0, 0, 0.5}
         end
         if Button("Remove Attachments", {104, 247, 114, 0.6}, {104, 247, 114, 0.5}, errCol) then
+            all_objects = entities.get_all_objects_as_handles()
+            for _, v in ipairs(all_objects) do
+                script.run_in_fiber(function()
+                    modelHash = ENTITY.GET_ENTITY_MODEL(v)
+                    attachedObject = ENTITY.GET_ENTITY_OF_TYPE_ATTACHED_TO_ENTITY(self.get_ped(), modelHash)
+                    if ENTITY.DOES_ENTITY_EXIST(attachedObject) then
+                        ENTITY.DETACH_ENTITY(attachedObject)
+                        ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(attachedObject)
+                        TASK.CLEAR_PED_TASKS(self.get_ped())
+                    end
+                end)
+            end
+            all_peds = entities.get_all_peds_as_handles()
+            for _, p in ipairs(all_peds) do
+                script.run_in_fiber(function()
+                    pedHash = ENTITY.GET_ENTITY_MODEL(p)
+                    attachedPed = ENTITY.GET_ENTITY_OF_TYPE_ATTACHED_TO_ENTITY(self.get_ped(), pedHash)
+                    if ENTITY.DOES_ENTITY_EXIST(attachedPed) then
+                        ENTITY.DETACH_ENTITY(attachedPed)
+                        TASK.CLEAR_PED_TASKS(self.get_ped())
+                        TASK.CLEAR_PED_TASKS(attachedPed)
+                        ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(attachedPed)
+                    end
+                end)
+            end
+            is_playing_anim = false
             if plyrProps[1] ~= nil then
-                for k, v in ipairs(plyrProps) do
-                    script.run_in_fiber(function()
-                        if ENTITY.DOES_ENTITY_EXIST(v) then
-                            ENTITY.DETACH_ENTITY(v)
-                            ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(v)
-                            TASK.CLEAR_PED_TASKS(self.get_ped())
-                            TASK.CLEAR_PED_TASKS(npc)
-                            TASK.CLEAR_PED_TASKS(sexPed)
-                            TASK.CLEAR_PED_TASKS(npcSexPed)
-                            is_playing_anim = false
-                        end
-                    end)
-                    table.remove(plyrProps, k)
+                for k, _ in ipairs(plyrProps) do
+                    plyrProps[k] = nil
                 end
             else
-                gui.show_error("YimActions", "There are no attachments to remove!")
+                gui.show_error("YimActions", "There are no objects or peds attached.")
             end
         end
-        widgetToolTip(false, "Detaches any attached or stuck props/peds.\n(Only works on attachments from this script)")
+        widgetToolTip(false, "Detaches all props.")
         -- if ImGui.Button("Add To Favorites") then
         --     table.insert(favorites, info)
         --     save_favorites()
@@ -409,6 +424,9 @@ YimActions:add_imgui(function()
                 if npcProps[1] ~= nil then
                     for k, v in ipairs(npcProps) do
                         script.run_in_fiber(function(script)
+                            if ENTITY.DOES_ENTITY_EXIST(v) then
+                                PED.DELETE_PED(v)
+                            end
                             if ENTITY.DOES_ENTITY_EXIST(v) then
                                 ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
                                 script:sleep(100)
