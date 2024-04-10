@@ -331,10 +331,10 @@ YimActions:add_imgui(function()
             for _, v in ipairs(all_objects) do
                 script.run_in_fiber(function()
                     modelHash = ENTITY.GET_ENTITY_MODEL(v)
-                    attachment = ENTITY.GET_ENTITY_OF_TYPE_ATTACHED_TO_ENTITY(self.get_ped(), modelHash)
-                    if ENTITY.DOES_ENTITY_EXIST(attachment) then
-                        ENTITY.DETACH_ENTITY(attachment)
-                        ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(attachment)
+                    attachedObject = ENTITY.GET_ENTITY_OF_TYPE_ATTACHED_TO_ENTITY(self.get_ped(), modelHash)
+                    if ENTITY.DOES_ENTITY_EXIST(attachedObject) then
+                        ENTITY.DETACH_ENTITY(attachedObject)
+                        ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(attachedObject)
                         TASK.CLEAR_PED_TASKS(self.get_ped())
                     end
                 end)
