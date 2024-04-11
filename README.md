@@ -50,8 +50,7 @@
 ## Known Issues:
 
 - Some particle effects are not visible to other players. I will probably fix them later but I'm quickly losing passion.
-- ~If an animation has props and you play it both on yourself and on a spawned NPC, only one prop will spawn.~ **FIXED**.
-- If you are not host of the session, you will randomly lose control over some spawned NPCs if you spawn more than one or two. Those NPCs will not follow you anymore and you can no longer delete them using the script.
+- If you are not host of the session, you will occasionally lose control over some spawned NPCs if you spawn more than one or two. Those NPCs will not follow you anymore and you can no longer delete them using the script.
 
 ## Credits:
 
