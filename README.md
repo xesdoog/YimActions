@@ -37,7 +37,7 @@
      1. Open **YimActions** and select the ![image](https://github.com/xesdoog/YimActions/assets/66764345/b976c1f7-0fd2-4fac-ae66-1a978dcf9874) tab at the top.
      2. Select an NPC from the dropdown list at the bottom then press spawn. This NPC will now follow you everywhere and will wait for you outside if you go into an interior.
      3. Select an animation from the list and pres **Play On NPC** at the bottom. You can play the same animation on yourself or select a different one.
-     - *NOTE: This is still a work in progress so expect to encounter a few bugs.*
+        > *NOTE: This is still a work in progress so expect to encounter a few bugs.*
      4. You can play every animation on an NPC that's sitting inside your car by adjusting the animation flags if needed. Example: if an animation plays on the full body like dancing anims for example, enable **Edit Flags** and select *Loop* and *Upper Body* so the NPC can still play it while sitting in your vehicle.
 
 - **Scenarios:**
@@ -45,7 +45,7 @@
     1. Open **YimActions** and select the ![image](https://github.com/xesdoog/YimActions/assets/66764345/e61e675b-b41e-406b-9e0f-846290d374fa) tab at the top.
     2. Select a scenario from the list then press **Play**.
     3. Once you're done, you can either press **Stop** to stop the scenario or simply press **[G]** on keyboard / **[DPAD Left]** on controller to do the same thing without opening the menu.
-    - *NOTE: you cannot control scenario props. scenarios are different from animations.*
+       > *NOTE: You cannot control scenario props. Scenarios are different from animations.*
 
 ## Known Issues:
 
