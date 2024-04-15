@@ -2,13 +2,14 @@
 YimActions = gui.get_tab("Samurai's YimActions")
 require ("animdata")
 json = json()
+-- local debug = false
 local anim_index = 0
 local scenario_index = 0
 local npc_index = 0
 local switch = 0
 local filteredAnims = {}
 local filteredScenarios = {}
-local favorites = {}
+-- local favorites = {}
 local searchQuery = ""
 local is_typing = false
 local searchBar = true
@@ -16,6 +17,7 @@ local x = 0
 local counter = 0
 local clumsy = false
 local rod = false
+local npc_godMode = false
 plyrProps = {}
 npcProps = {}
 selfPTFX = {}
@@ -412,13 +414,11 @@ YimActions:add_imgui(function()
         ImGui.PushItemWidth(200)
         displayNpcs()
         ImGui.PopItemWidth()
-        ImGui.SameLine()
         local npcData = filteredNpcs[npc_index + 1]
         function cleanupNPC()
             script.run_in_fiber(function()
                 for _, v in ipairs(spawned_npcs) do
                     TASK.CLEAR_PED_TASKS(v)
-                    TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
                     PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
                 end
                 if npcProps[1] ~= nil then
@@ -451,6 +451,9 @@ YimActions:add_imgui(function()
                 STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
             end)
         end
+        ImGui.SameLine()
+        npc_godMode, used = ImGui.Checkbox("Invincibe", npc_godMode, true)
+        widgetToolTip(false, "Spawn NPCs in God Mode.")
         if ImGui.Button("Spawn") then
             script.run_in_fiber(function(script)
                 local pedCoords = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
@@ -462,16 +465,19 @@ YimActions:add_imgui(function()
                     coroutine.yield()
                 end
                 npc = PED.CREATE_PED(npcData.group, npcData.hash, 0.0, 0.0, 0.0, 0.0, true, false)
-                ENTITY.SET_ENTITY_INVINCIBLE(npc, true)
                 ENTITY.SET_ENTITY_COORDS_NO_OFFSET(npc, pedCoords.x + pedForwardX * 1.4, pedCoords.y + pedForwardY * 1.4, pedCoords.z, true, false, false)
                 ENTITY.SET_ENTITY_HEADING(npc, pedHeading - 180)
                 table.insert(spawned_npcs, npc)
                 npcNetID2 = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(npc)
-                RequestControl(npc, npcNetID2, 250)
+                controlled = entities.take_control_of(npc, 300)
                 script:sleep(500)
-                entToNet(npc, npcNetID2)
+                entToNet(npcNetID2)
                 TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
                 PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true)
+                
+                if npc_godMode then
+                    ENTITY.SET_ENTITY_INVINCIBLE(npc, true)
+                end
             end)
         end
         ImGui.SameLine()
@@ -486,7 +492,8 @@ YimActions:add_imgui(function()
                 end
             end)
         end
-        if ImGui.Button(" Play On NPC ") then
+        ImGui.SameLine()
+        if ImGui.Button("Play On NPC") then
             if spawned_npcs[1] ~= nil then
                 for _, v in ipairs(spawned_npcs) do
                     if ENTITY.DOES_ENTITY_EXIST(v) then
@@ -688,6 +695,8 @@ YimActions:add_imgui(function()
         displayNpcs()
         ImGui.PopItemWidth()
         ImGui.SameLine()
+        npc_godMode, used = ImGui.Checkbox("Invincibe", npc_godMode, true)
+        widgetToolTip(false, "Spawn NPCs in God Mode.")
         local npcData = filteredNpcs[npc_index + 1]
         if ImGui.Button("Spawn") then
             local pedCoords = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
@@ -700,16 +709,18 @@ YimActions:add_imgui(function()
                     coroutine.yield()
                 end
                 npc = PED.CREATE_PED(npcData.group, npcData.hash, 0.0, 0.0, 0.0, 0.0, true, false)
-                ENTITY.SET_ENTITY_INVINCIBLE(npc, true)
                 ENTITY.SET_ENTITY_COORDS_NO_OFFSET(npc, pedCoords.x + pedForwardX * 1.4, pedCoords.y + pedForwardY * 1.4, pedCoords.z, true, false, false)
                 ENTITY.SET_ENTITY_HEADING(npc, pedHeading - 180)
                 table.insert(spawned_npcs, npc)
                 npcNetID2 = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(npc)
-                RequestControl(npc, npcNetID2, 250)
-                entToNet(npc, npcNetID2)
+                controlled = entities.take_control_of(npc, 300)
+                entToNet(npcNetID2)
                 TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
                 PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true) --keeps them from acting like pussies and running away.
                 -- TASK.TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true) --complements the previous native but in this case it stops them from following the player.
+                if npc_godMode then
+                    ENTITY.SET_ENTITY_INVINCIBLE(npc, true)
+                end
             end)
         end
         ImGui.SameLine()
@@ -726,7 +737,8 @@ YimActions:add_imgui(function()
                 end
             end)
         end
-        if ImGui.Button(" Play On NPC ") then
+        ImGui.SameLine()
+        if ImGui.Button("Play On NPC") then
             if spawned_npcs[1] ~= nil then
                 if is_playing_anim then
                     cleanupNPC()
