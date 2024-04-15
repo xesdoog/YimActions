@@ -620,7 +620,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
               table.insert(propTable, propPed)
               npcNetID = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(propPed)
               RequestControl(propPed, npcNetID, 250)
-              entToNet(propPed, npcNetID)
+              entToNet(npcNetID)
               while not STREAMING.HAS_ANIM_DICT_LOADED(info.dict2) do
                   STREAMING.REQUEST_ANIM_DICT(info.dict2)
                   coroutine.yield()
