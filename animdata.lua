@@ -414,14 +414,22 @@ function RequestControl(entity, netID, ticks)
     end)
 end
 
-function entToNet(entity, netID)
+function entToNet(netID)
     script.run_in_fiber(function()
+      local retry = 0
+        while not NETWORK.NETWORK_HAS_CONTROL_OF_NETWORK_ID(netID) do
+          NETWORK.NETWORK_REQUEST_CONTROL_OF_NETWORK_ID(netID)
+          coroutine.yield()
+          if retry > 150 then
+            return
+          else
+            retry = retry + 1
+          end
+        end
         if NETWORK.NETWORK_HAS_CONTROL_OF_NETWORK_ID(netID) then
+            NETWORK.SET_NETWORK_ID_CAN_MIGRATE(netID, true)
             NETWORK.SET_NETWORK_ID_EXISTS_ON_ALL_MACHINES(netID)
             NETWORK.SET_NETWORK_ID_VISIBLE_IN_CUTSCENE(netID, false, true)
-            NETWORK.NETWORK_SET_ENTITY_ONLY_EXISTS_FOR_PARTICIPANTS(entity, false)
-            NETWORK.SET_NETWORK_ID_ALWAYS_EXISTS_FOR_PLAYER(netID, ped, true)
-            NETWORK.SET_NETWORK_ID_CAN_MIGRATE(netID, false)
         end
     end)
 end
