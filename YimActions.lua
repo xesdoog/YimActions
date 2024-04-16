@@ -185,11 +185,9 @@ script.register_looped("follow ped", function(follow)
     for k, v in ipairs(spawned_npcs) do
         if ENTITY.DOES_ENTITY_EXIST(v) then
             if ENTITY.IS_ENTITY_DEAD(v) then
-                follow:sleep(2000)
-                PED.RESURRECT_PED(v)
-                TASK.CLEAR_PED_TASKS_IMMEDIATELY(v)
-                TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
-                PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
+                follow:sleep(3000)
+                PED.DELETE_PED(v)
+                table.remove(spawned_npcs, k)
             elseif PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), true) and not PED.IS_PED_SITTING_IN_ANY_VEHICLE(v) then
                 veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
                 if VEHICLE.IS_VEHICLE_SEAT_FREE(veh, 0, 0) then
