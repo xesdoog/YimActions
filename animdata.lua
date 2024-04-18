@@ -438,7 +438,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     if info.type == 1 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
         script.run_in_fiber(function()
@@ -463,7 +463,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 2 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
         script.run_in_fiber(function(type2)
@@ -486,7 +486,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 3 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
         script.run_in_fiber(function()
@@ -512,7 +512,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 4 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
         script.run_in_fiber(function(type4)
@@ -540,7 +540,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 5 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
         script.run_in_fiber(function(type5)
@@ -573,7 +573,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 6 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
       script.run_in_fiber(function()
@@ -605,7 +605,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 7 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
       script.run_in_fiber(function()
@@ -641,7 +641,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     else
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
       script.run_in_fiber(function()

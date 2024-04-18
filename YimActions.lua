@@ -17,7 +17,6 @@ local x = 0
 local counter = 0
 local clumsy = false
 local rod = false
-npc_godMode = false
 plyrProps = {}
 npcProps = {}
 selfPTFX = {}
@@ -27,6 +26,7 @@ is_playing_anim = false
 is_playing_scenario = false
 default_config = {disableTooltips = false, phoneAnim = false, disableProps = false, sprintInside = false, lockpick = false, manualFlags = false, controllable = false, looped = false, upperbody = false, freeze = false, usePlayKey = false}
 disableProps = readFromConfig("disableProps")
+npc_godMode = readFromConfig("npc_godMode")
 local disableTooltips = readFromConfig("disableTooltips")
 local phoneAnim = readFromConfig("phoneAnim")
 local sprintInside = readFromConfig("sprintInside")
@@ -181,31 +181,16 @@ script.register_looped("Ragdoll Loop", function(script)
     end
     script:yield()
 end)
-script.register_looped("follow ped", function(follow)
+script.register_looped("npc stuff", function(follow)
     for k, v in ipairs(spawned_npcs) do
         if ENTITY.DOES_ENTITY_EXIST(v) then
             if ENTITY.IS_ENTITY_DEAD(v) then
+                PED.REMOVE_PED_FROM_GROUP(v)
                 follow:sleep(3000)
                 PED.DELETE_PED(v)
                 table.remove(spawned_npcs, k)
-            elseif PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), true) and not PED.IS_PED_SITTING_IN_ANY_VEHICLE(v) then
-                veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
-                if VEHICLE.IS_VEHICLE_SEAT_FREE(veh, 0, 0) then
-                    seat = 0
-                else
-                    seat = tostring(k)
-                end
-                TASK.CLEAR_PED_TASKS_IMMEDIATELY(v)
-                TASK.TASK_ENTER_VEHICLE(v, veh, 20000, seat, 2.0, 16, 0)
-                follow:sleep(2000)
-            elseif PED.IS_PED_SITTING_IN_ANY_VEHICLE(v) and not PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
-                TASK.CLEAR_PED_TASKS(v)
-                TASK.TASK_LEAVE_VEHICLE(v, veh, 0)
-                TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
-                PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
             end
         end
-        follow:yield()
     end
 end)
 YimActions:add_imgui(function()
@@ -431,7 +416,6 @@ YimActions:add_imgui(function()
                                 ENTITY.DELETE_ENTITY(v)
                             end
                         end)
-                        table.remove(npcProps, k)
                     end
                 end
                 if ENTITY.DOES_ENTITY_EXIST(npcSexPed) then
@@ -451,13 +435,17 @@ YimActions:add_imgui(function()
         end
         ImGui.SameLine()
         npc_godMode, used = ImGui.Checkbox("Invincibe", npc_godMode, true)
+        if used then
+            saveToConfig("npc_godMode", npc_godMode)
+        end
         widgetToolTip(false, "Spawn NPCs in God Mode.")
         if ImGui.Button("Spawn") then
-            script.run_in_fiber(function(script)
+            script.run_in_fiber(function()
                 local pedCoords = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
                 local pedHeading = ENTITY.GET_ENTITY_HEADING(self.get_ped())
                 local pedForwardX = ENTITY.GET_ENTITY_FORWARD_X(self.get_ped())
                 local pedForwardY = ENTITY.GET_ENTITY_FORWARD_Y(self.get_ped())
+                local myGroup = PLAYER.GET_PLAYER_GROUP(self.get_ped())
                 while not STREAMING.HAS_MODEL_LOADED(npcData.hash) do
                     STREAMING.REQUEST_MODEL(npcData.hash)
                     coroutine.yield()
@@ -465,17 +453,44 @@ YimActions:add_imgui(function()
                 npc = PED.CREATE_PED(npcData.group, npcData.hash, 0.0, 0.0, 0.0, 0.0, true, false)
                 ENTITY.SET_ENTITY_COORDS_NO_OFFSET(npc, pedCoords.x + pedForwardX * 1.4, pedCoords.y + pedForwardY * 1.4, pedCoords.z, true, false, false)
                 ENTITY.SET_ENTITY_HEADING(npc, pedHeading - 180)
-                table.insert(spawned_npcs, npc)
-                npcNetID2 = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(npc)
-                controlled = entities.take_control_of(npc, 300)
-                script:sleep(500)
-                entToNet(npcNetID2)
-                TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
-                PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true)
-                
+                PED.SET_PED_AS_GROUP_MEMBER(npc, myGroup)
+                PED.SET_PED_NEVER_LEAVES_GROUP(npc, true)
+                npcBlip = HUD.ADD_BLIP_FOR_ENTITY(npc)
+                HUD.SET_BLIP_AS_FRIENDLY(npcBlip, true)
+                HUD.SET_BLIP_SCALE(npcBlip, 0.8)
+                HUD.SHOW_HEADING_INDICATOR_ON_BLIP(npcBlip, true)
+                WEAPON.GIVE_WEAPON_TO_PED(npc, 350597077, 9999, false, true)
+                PED.SET_GROUP_FORMATION(myGroup, 2)
+                PED.SET_GROUP_FORMATION_SPACING(myGroup, 1.0, 1.0, 1.0)
+                PED.SET_PED_CONFIG_FLAG(npc, 179, true)
+                PED.SET_PED_CONFIG_FLAG(npc, 294, true)
+                PED.SET_PED_CONFIG_FLAG(npc, 398, true)
+                PED.SET_PED_CONFIG_FLAG(npc, 401, true)
+                PED.SET_PED_CONFIG_FLAG(npc, 443, true)
+                PED.SET_PED_COMBAT_ABILITY(npc, 2)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 2, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 3, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 5, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 13, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 20, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 21, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 22, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 27, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 28, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 31, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 34, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 41, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 42, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 46, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 50, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 58, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 61, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 71, true)
+                -- PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true)
                 if npc_godMode then
                     ENTITY.SET_ENTITY_INVINCIBLE(npc, true)
                 end
+                table.insert(spawned_npcs, npc)
             end)
         end
         ImGui.SameLine()
@@ -484,6 +499,7 @@ YimActions:add_imgui(function()
             script.run_in_fiber(function()
                 for k, v in ipairs(spawned_npcs) do
                     if ENTITY.DOES_ENTITY_EXIST(v) then
+                        PED.REMOVE_PED_FROM_GROUP(v)
                         ENTITY.DELETE_ENTITY(v)
                     end
                     table.remove(spawned_npcs, k)
@@ -492,6 +508,12 @@ YimActions:add_imgui(function()
         end
         ImGui.SameLine()
         if ImGui.Button("Play On NPC") then
+            -- script.run_in_fiber(function(cunt)
+            --     if is_playing_anim then
+            --         cleanupNPC()
+            --     end
+            --     cunt:sleep(200)
+            -- end)
             if spawned_npcs[1] ~= nil then
                 for _, v in ipairs(spawned_npcs) do
                     if ENTITY.DOES_ENTITY_EXIST(v) then
@@ -506,7 +528,7 @@ YimActions:add_imgui(function()
                         else
                             flag = info.flag
                         end
-                        playSelected(v, npcprop1, npcprop2, npcloopedFX, npcSexPed, npcBoneIndex, npcCoords, npcHeading, npcForwardX, npcForwardY, npcBboneCoords, "npc", npcProps, npcPTFX)
+                        playSelected(v, npcprop1, npcprop2, npcloopedFX, npcSexPed, npcBoneIndex, npcCoords, npcHeading, npcForwardX, npcForwardY, npcBboneCoords, "cunt", npcProps, npcPTFX)
                     end
                 end
             else
@@ -518,12 +540,17 @@ YimActions:add_imgui(function()
             cleanupNPC()
             for _, v in ipairs(spawned_npcs) do
                 script.run_in_fiber(function()
-                    TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
-                    PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
                     if PED.IS_PED_IN_ANY_VEHICLE(v, false) then
                         local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
-                        PED.SET_PED_INTO_VEHICLE(v, veh, 0)
-                        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
+                        for i = 0, 4 do
+                            if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
+                                sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, false)
+                                if sittingPed == v then
+                                    seat = i
+                                end
+                            end
+                            PED.SET_PED_INTO_VEHICLE(v, veh, seat)
+                        end
                     end
                 end)
             end
@@ -567,7 +594,7 @@ YimActions:add_imgui(function()
                     if ENTITY.DOES_ENTITY_EXIST(v) then
                         ENTITY.DELETE_ENTITY(v)
                     end
-                    table.remove(plyrProps, k)
+                    table.remove(spawned_npcs, k)
                 end
             end
         end)
@@ -701,7 +728,8 @@ YimActions:add_imgui(function()
             local pedHeading = ENTITY.GET_ENTITY_HEADING(self.get_ped())
             local pedForwardX = ENTITY.GET_ENTITY_FORWARD_X(self.get_ped())
             local pedForwardY = ENTITY.GET_ENTITY_FORWARD_Y(self.get_ped())
-            script.run_in_fiber(function(script)
+            local myGroup = PLAYER.GET_PLAYER_GROUP(self.get_ped())
+            script.run_in_fiber(function()
                 while not STREAMING.HAS_MODEL_LOADED(npcData.hash) do
                     STREAMING.REQUEST_MODEL(npcData.hash)
                     coroutine.yield()
@@ -709,26 +737,55 @@ YimActions:add_imgui(function()
                 npc = PED.CREATE_PED(npcData.group, npcData.hash, 0.0, 0.0, 0.0, 0.0, true, false)
                 ENTITY.SET_ENTITY_COORDS_NO_OFFSET(npc, pedCoords.x + pedForwardX * 1.4, pedCoords.y + pedForwardY * 1.4, pedCoords.z, true, false, false)
                 ENTITY.SET_ENTITY_HEADING(npc, pedHeading - 180)
-                table.insert(spawned_npcs, npc)
-                npcNetID2 = NETWORK.NETWORK_GET_NETWORK_ID_FROM_ENTITY(npc)
-                controlled = entities.take_control_of(npc, 300)
-                entToNet(npcNetID2)
-                TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(npc, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
-                PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true) --keeps them from acting like pussies and running away.
-                -- TASK.TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true) --complements the previous native but in this case it stops them from following the player.
+                PED.SET_PED_AS_GROUP_MEMBER(npc, myGroup)
+                PED.SET_PED_NEVER_LEAVES_GROUP(npc, true)
+                npcBlip = HUD.ADD_BLIP_FOR_ENTITY(npc)
+                HUD.SET_BLIP_AS_FRIENDLY(npcBlip, true)
+                HUD.SET_BLIP_SCALE(npcBlip, 0.8)
+                HUD.SHOW_HEADING_INDICATOR_ON_BLIP(npcBlip, true)
+                HUD.SET_BLIP_SPRITE(npcBlip, 280)
+                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(npc, pedCoords.x + pedForwardX * 1.4, pedCoords.y + pedForwardY * 1.4, pedCoords.z, true, false, false)
+                ENTITY.SET_ENTITY_HEADING(npc, pedHeading - 180)
+                WEAPON.GIVE_WEAPON_TO_PED(npc, 350597077, 9999, false, true)
+                PED.SET_GROUP_FORMATION(myGroup, 2)
+                PED.SET_GROUP_FORMATION_SPACING(myGroup, 1.0, 1.0, 1.0)
+                PED.SET_PED_CONFIG_FLAG(npc, 179, true)
+                PED.SET_PED_CONFIG_FLAG(npc, 294, true)
+                PED.SET_PED_CONFIG_FLAG(npc, 398, true)
+                PED.SET_PED_CONFIG_FLAG(npc, 401, true)
+                PED.SET_PED_CONFIG_FLAG(npc, 443, true)
+                PED.SET_PED_COMBAT_ABILITY(npc, 3)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 2, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 3, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 5, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 13, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 20, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 21, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 22, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 27, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 28, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 31, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 34, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 41, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 42, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 46, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 50, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 58, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 61, true)
+                PED.SET_PED_COMBAT_ATTRIBUTES(npc, 71, true)
+                PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(npc, true)
                 if npc_godMode then
                     ENTITY.SET_ENTITY_INVINCIBLE(npc, true)
                 end
+                table.insert(spawned_npcs, npc)
             end)
         end
         ImGui.SameLine()
         if ImGui.Button("Delete") then
             script.run_in_fiber(function()
-                if ENTITY.DOES_ENTITY_EXIST(npc) then
-                    PED.DELETE_PED(npc)
-                end
                 for k, v in ipairs(spawned_npcs) do
                     if ENTITY.DOES_ENTITY_EXIST(v) then
+                        PED.REMOVE_PED_FROM_GROUP(v)
                         ENTITY.DELETE_ENTITY(v)
                     end
                     table.remove(spawned_npcs, k)
@@ -782,8 +839,6 @@ YimActions:add_imgui(function()
                     busyspinner("Stopping scenario...", 3)
                     for _, v in ipairs(spawned_npcs) do
                         TASK.CLEAR_PED_TASKS(v)
-                        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
-                        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
                     end
                     is_playing_scenario = false
                     if ENTITY.DOES_ENTITY_EXIST(bbq) then
@@ -942,8 +997,6 @@ script.register_looped("scenario hotkey", function(hotkey)
                 TASK.CLEAR_PED_TASKS(self.get_ped())
                 for _, v in ipairs(spawned_npcs) do
                     TASK.CLEAR_PED_TASKS(v)
-                    TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
-                    PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
                 end
                 script:sleep(800)
                 HUD.BUSYSPINNER_OFF()
@@ -997,29 +1050,38 @@ script.register_looped("animation hotkey", function(script)
     if is_playing_anim then
         if spawned_npcs[1] ~= nil then
             if PAD.IS_CONTROL_PRESSED(0, 47) then
-                for k, v in ipairs(spawned_npcs) do
-                    if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
+                cleanup()
+                cleanupNPC()
+                for _, v in ipairs(spawned_npcs) do
+                    if PED.IS_PED_IN_ANY_VEHICLE(v, false) then
                         local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
-                        cleanup()
-                        PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, -1)
-                        cleanupNPC()
-                        PED.SET_PED_INTO_VEHICLE(v, veh, 0)
-                    else
-                        cleanup()
-                        cleanupNPC()
-                        local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
-                        local npc_coords = ENTITY.GET_ENTITY_COORDS(v)
-                        ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
-                        ENTITY.SET_ENTITY_COORDS_NO_OFFSET(v, npc_coords.x, npc_coords.y, npc_coords.z, true, false, false)
-                        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(v, self.get_ped(), 0.5, 0.5, 0.0, -1, -1, 1.4, true)
-                        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
+                        for i = 0, 4 do
+                            if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
+                                sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, false)
+                                if sittingPed == v then
+                                    seat = i
+                                end
+                            end
+                            PED.SET_PED_INTO_VEHICLE(v, veh, seat)
+                        end
                     end
+                end
+                if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
+                    local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
+                    cleanup()
+                    PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, -1)
+                else
+                    cleanup()
+                    local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
+                    ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
                 end
                 is_playing_anim = false
             end
         else
             if PAD.IS_CONTROL_PRESSED(0, 47) then
                 cleanup()
+                local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
+                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
                 is_playing_anim = false
             end
         end
