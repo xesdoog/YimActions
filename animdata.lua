@@ -301,8 +301,8 @@ ped_scenarios = {
 }
 
 npcList = {
-    {group = "PED_TYPE_CIVFEMALE", hash = 0x6E0FB794, name = "Hooker"},
-    {group = "PED_TYPE_CIVFEMALE", hash = 0x52580019, name = "Hooker 02"},
+    {group = "PED_TYPE_PROSTITUTE", hash = 0x6E0FB794, name = "Hooker"},
+    {group = "PED_TYPE_PROSTITUTE", hash = 0x52580019, name = "Hooker 02"},
     {group = "PED_TYPE_CIVFEMALE", hash = 0x780C01BD, name = "VU Bartender"},
     {group = "PED_TYPE_CIVMALE", hash = 0x5442C66B, name = "Cult Fat Man"},
     {group = "PED_TYPE_CIVMALE", hash = 0x55446010, name = "Cult Old Man"},
@@ -314,7 +314,7 @@ npcList = {
     {group = "PED_TYPE_CIVMALE", hash = 0x8CE6A476, name = "Yeti"},
     {group = "PED_TYPE_CIVFEMALE", hash = 0xB5CF80E4, name = "Cult Fat Woman"},
     {group = "PED_TYPE_CIVFEMALE", hash = 0x3BD99114, name = "Muscle Woman"},
-    {group = "PED_TYPE_CIVMALE", hash = 0x4B652906, name = "Muscle Man"},
+    {group = "PED_TYPE_CIVMALE", hash = 0xDA116E7E, name = "Muscle Man"},
     {group = "PED_TYPE_CIVFEMALE", hash = 0x51D861F2, name = "Luchadora"},
     {group = "PED_TYPE_ANIMAL", hash = 0xCE5FF074, name = "Boar"},
     {group = "PED_TYPE_ANIMAL", hash = 0x4E8F95A2, name = "Husky"},
@@ -326,6 +326,7 @@ npcList = {
     {group = "PED_TYPE_ANIMAL", hash = 0xC3B52966, name = "Rat"},
     {group = "PED_TYPE_ARMY", hash = 0xB3F3EE34, name = "Mercenary 01"},
     {group = "PED_TYPE_ARMY", hash = 0x5076A73B, name = "Mercenary 02"},
+    {group = "PED_TYPE_ARMY", hash = 0x613E626C, name = "Mercenary 03"},
     {group = "PED_TYPE_COP", hash = 0x15F8700D, name = "Police (female)"},
     {group = "PED_TYPE_COP", hash = 0x5E3DA4A4, name = "Police (male)"},
     {group = "PED_TYPE_COP", hash = 0x8D8F1B10, name = "Police (SWAT)"},
@@ -344,6 +345,7 @@ npcList = {
     {group = "PED_TYPE_CIVMALE", hash = 0x9B557274, name = "Personal Bodyguard"},
     {group = "PED_TYPE_CIVMALE", hash = 0x850446EC, name = "Lazlow"},
     {group = "PED_TYPE_CIVMALE", hash = 0xE80E9160, name = "Brucie Kibbutz"},
+    {group = "PED_TYPE_CIVMALE", hash = 0x64611296, name = "Alien"},
 }
 
 function Button(text, color, hovercolor, activecolor)
@@ -438,7 +440,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     if info.type == 1 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
         script.run_in_fiber(function()
@@ -463,7 +465,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 2 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
         script.run_in_fiber(function(type2)
@@ -486,7 +488,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 3 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
         script.run_in_fiber(function()
@@ -512,7 +514,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 4 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
         script.run_in_fiber(function(type4)
@@ -540,7 +542,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 5 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
         script.run_in_fiber(function(type5)
@@ -573,7 +575,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 6 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
       script.run_in_fiber(function()
@@ -605,7 +607,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     elseif info.type == 7 then
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
       script.run_in_fiber(function()
@@ -641,7 +643,7 @@ function playSelected(target, prop1, prop2, loopedFX, propPed, targetBone, targe
     else
       if ent == "self" then
         cleanup()
-      else
+      elseif ent == "npc" then
         cleanupNPC()
       end
       script.run_in_fiber(function()
