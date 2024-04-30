@@ -149,7 +149,7 @@ local function setballistic()
           STREAMING.REQUEST_CLIP_SET("anim_group_move_ballistic")
           coroutine.yield()
       end
-      PED.SET_PED_MOVEMENT_CLIPSET(self.get_ped(), "anim_group_move_ballistic", 1)           
+      PED.SET_PED_MOVEMENT_CLIPSET(self.get_ped(), "anim_group_move_ballistic", 1)
   end)
 end
 function resetCheckBoxes()
@@ -195,21 +195,6 @@ script.register_looped("npc stuff", function(npcStuff)
         enemy = PED.GET_PED_TARGET_FROM_COMBAT_PED(self.get_ped(), 1)
         TASK.TASK_COMBAT_PED(v, enemy, 0, 16)
       end
-  -- if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
-      -- npcStuff:sleep(10000)
-      -- if not PED.IS_PED_IN_ANY_VEHICLE(v, false) then
-      --   local myVeh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
-      --   local mySpeed = ENTITY.GET_ENTITY_SPEED(myVeh)
-      --   local npcPos = ENTITY.GET_ENTITY_COORDS(v, false)
-      --   local randomVehicle = VEHICLE.GET_CLOSEST_VEHICLE(npcPos.x, npcPos.y, npcPos.z, 50, 0, 70)
-      --   PED.SET_PED_INTO_VEHICLE(v, randomVehicle, -1)
-      --   TASK.TASK_VEHICLE_ESCORT(v, randomVehicle, myVeh, -1, mySpeed, 786468, 20, 20, 20)
-      -- end
-  -- end
-  -- if PED.IS_PED_IN_ANY_VEHICLE(v, false) and not PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
---     npcVehicle = PED.GET_VEHICLE_PED_IS_IN(v, false)
---     TASK.TASK_LEAVE_VEHICLE(v, npcVehicle, 0)
-  -- end
     end
   end
 end)
@@ -412,46 +397,44 @@ YimActions:add_imgui(function()
       if isChanged then setballistic() end
       ImGui.Separator()
       ImGui.Text("Play Animations On NPCs:")
-      ImGui.SameLine()
-      coloredText("[Work In Progress]", {247, 185, 104, 0.78})
-      ImGui.PushItemWidth(200)
+      ImGui.PushItemWidth(220)
       displayNpcs()
       ImGui.PopItemWidth()
       local npcData = filteredNpcs[npc_index + 1]
       function cleanupNPC()
-          script.run_in_fiber(function()
-              for _, v in ipairs(spawned_npcs) do
-                  TASK.CLEAR_PED_TASKS(v)
-                  PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
-              end
-              if npcProps[1] ~= nil then
-                  for k, v in ipairs(npcProps) do
-                      script.run_in_fiber(function(script)
-                          if ENTITY.DOES_ENTITY_EXIST(v) then
-                              PED.DELETE_PED(v)
-                          end
-                          if ENTITY.DOES_ENTITY_EXIST(v) then
-                              ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
-                              script:sleep(100)
-                              ENTITY.DELETE_ENTITY(v)
-                          end
-                      end)
-                  end
-              end
-              if ENTITY.DOES_ENTITY_EXIST(npcSexPed) then
-                  PED.DELETE_PED(npcSexPed)
-              end
-              if npcPTFX[1] ~= nil then
-                  for key, value in ipairs(npcPTFX) do
-                      script.run_in_fiber(function()
-                          GRAPHICS.STOP_PARTICLE_FX_LOOPED(value)
-                      end)
-                      table.remove(npcPTFX, key)
-                  end
-              end
-              STREAMING.REMOVE_ANIM_DICT(info.dict)
-              STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-          end)
+        script.run_in_fiber(function()
+          for _, v in ipairs(spawned_npcs) do
+            TASK.CLEAR_PED_TASKS(v)
+            PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(v, true)
+          end
+          if npcProps[1] ~= nil then
+            for _, v in ipairs(npcProps) do
+              script.run_in_fiber(function(script)
+                if ENTITY.DOES_ENTITY_EXIST(v) then
+                  PED.DELETE_PED(v)
+                end
+                if ENTITY.DOES_ENTITY_EXIST(v) then
+                  ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
+                  script:sleep(100)
+                  ENTITY.DELETE_ENTITY(v)
+                end
+              end)
+            end
+          end
+          if ENTITY.DOES_ENTITY_EXIST(npcSexPed) then
+            PED.DELETE_PED(npcSexPed)
+          end
+          if npcPTFX[1] ~= nil then
+            for key, value in ipairs(npcPTFX) do
+              script.run_in_fiber(function()
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(value)
+              end)
+                table.remove(npcPTFX, key)
+            end
+          end
+          STREAMING.REMOVE_ANIM_DICT(info.dict)
+          STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
+        end)
       end
       ImGui.SameLine()
       npc_godMode, used = ImGui.Checkbox("Invincibe", npc_godMode, true)
@@ -465,7 +448,11 @@ YimActions:add_imgui(function()
               local pedHeading = ENTITY.GET_ENTITY_HEADING(self.get_ped())
               local pedForwardX = ENTITY.GET_ENTITY_FORWARD_X(self.get_ped())
               local pedForwardY = ENTITY.GET_ENTITY_FORWARD_Y(self.get_ped())
-              local myGroup = PLAYER.GET_PLAYER_GROUP(self.get_ped())
+              local myGroup = PED.GET_PED_GROUP_INDEX(self.get_ped())
+              if not PED.DOES_GROUP_EXIST(myGroup) then
+                myGroup = PED.CREATE_GROUP(0)
+              end
+              PED.SET_GROUP_SEPARATION_RANGE(myGroup, 16960)
               while not STREAMING.HAS_MODEL_LOADED(npcData.hash) do
                   STREAMING.REQUEST_MODEL(npcData.hash)
                   coroutine.yield()
@@ -529,52 +516,54 @@ YimActions:add_imgui(function()
       end
       ImGui.SameLine()
       if ImGui.Button("Play On NPC") then
-          -- script.run_in_fiber(function(cunt)
-          --     if is_playing_anim then
-          --         cleanupNPC()
-          --     end
-          --     cunt:sleep(200)
-          -- end)
-          if spawned_npcs[1] ~= nil then
-              for _, v in ipairs(spawned_npcs) do
-                  if ENTITY.DOES_ENTITY_EXIST(v) then
-                      local npcCoords = ENTITY.GET_ENTITY_COORDS(v, false)
-                      local npcHeading = ENTITY.GET_ENTITY_HEADING(v)
-                      local npcForwardX = ENTITY.GET_ENTITY_FORWARD_X(v)
-                      local npcForwardY = ENTITY.GET_ENTITY_FORWARD_Y(v)
-                      local npcBoneIndex = PED.GET_PED_BONE_INDEX(v, info.boneID)
-                      local npcBboneCoords = PED.GET_PED_BONE_COORDS(v, info.boneID)
-                      if manualFlags then
-                          setmanualflag()
-                      else
-                          flag = info.flag
-                      end
-                      playSelected(v, npcprop1, npcprop2, npcloopedFX, npcSexPed, npcBoneIndex, npcCoords, npcHeading, npcForwardX, npcForwardY, npcBboneCoords, "cunt", npcProps, npcPTFX)
-                  end
+        -- script.run_in_fiber(function(cunt)
+        --     if is_playing_anim then
+        --         cleanupNPC()
+        --     end
+        --     cunt:sleep(200)
+        -- end)
+        if spawned_npcs[1] ~= nil then
+          for _, v in ipairs(spawned_npcs) do
+            if ENTITY.DOES_ENTITY_EXIST(v) then
+              local npcCoords = ENTITY.GET_ENTITY_COORDS(v, false)
+              local npcHeading = ENTITY.GET_ENTITY_HEADING(v)
+              local npcForwardX = ENTITY.GET_ENTITY_FORWARD_X(v)
+              local npcForwardY = ENTITY.GET_ENTITY_FORWARD_Y(v)
+              local npcBoneIndex = PED.GET_PED_BONE_INDEX(v, info.boneID)
+              local npcBboneCoords = PED.GET_PED_BONE_COORDS(v, info.boneID)
+              if manualFlags then
+                setmanualflag()
+              else
+                flag = info.flag
               end
-          else
-              gui.show_error("YimActions", "Spawn an NPC first!")
+              playSelected(v, npcprop1, npcprop2, npcloopedFX, npcSexPed, npcBoneIndex, npcCoords, npcHeading, npcForwardX, npcForwardY, npcBboneCoords, "cunt", npcProps, npcPTFX)
+            end
           end
+        else
+            gui.show_error("YimActions", "Spawn an NPC first!")
+        end
       end
       ImGui.SameLine()
       if ImGui.Button("Stop NPC") then
-          cleanupNPC()
-          for _, v in ipairs(spawned_npcs) do
-              script.run_in_fiber(function()
-                  if PED.IS_PED_IN_ANY_VEHICLE(v, false) then
-                      local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
-                      for i = 0, 4 do
-                          if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
-                              sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, false)
-                              if sittingPed == v then
-                                  seat = i
-                              end
-                          end
-                          PED.SET_PED_INTO_VEHICLE(v, veh, seat)
-                      end
+        local seat = 0
+        for _, v in ipairs(spawned_npcs) do
+            script.run_in_fiber(function()
+              if PED.IS_PED_IN_ANY_VEHICLE(v, false) then
+                local veh = PED.GET_VEHICLE_PED_IS_IN(self.get_ped(), false)
+                local maxSeats = VEHICLE.GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(veh)
+                for i = 0, maxSeats do
+                  if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
+                    sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, false)
+                    if sittingPed == v then
+                      seat = i
+                    end
                   end
-              end)
+                end
+              end
+            end)
           end
+        cleanupNPC()
+        PED.SET_PED_INTO_VEHICLE(v, veh, seat)
       end
       event.register_handler(menu_event.ScriptsReloaded, function()
           PED.RESET_PED_MOVEMENT_CLIPSET(self.get_ped(), 0.0)
@@ -716,7 +705,7 @@ YimActions:add_imgui(function()
               end)
           end
       end
-      ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() 
+      ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
       ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
       if ImGui.Button("   Stop   ") then
           if is_playing_scenario then
@@ -735,9 +724,7 @@ YimActions:add_imgui(function()
       widgetToolTip(false, "TIP: You can also stop scenarios by pressing [G] on keyboard or [DPAD LEFT] on controller.")
       ImGui.Separator()
       ImGui.Text("Play Scenarios On NPCs:")
-      ImGui.SameLine()
-      coloredText("[Work In Progress]", {247, 185, 104, 0.78})
-      ImGui.PushItemWidth(200)
+      ImGui.PushItemWidth(220)
       displayNpcs()
       ImGui.PopItemWidth()
       ImGui.SameLine()
@@ -749,7 +736,10 @@ YimActions:add_imgui(function()
           local pedHeading = ENTITY.GET_ENTITY_HEADING(self.get_ped())
           local pedForwardX = ENTITY.GET_ENTITY_FORWARD_X(self.get_ped())
           local pedForwardY = ENTITY.GET_ENTITY_FORWARD_Y(self.get_ped())
-          local myGroup = PLAYER.GET_PLAYER_GROUP(self.get_ped())
+          local myGroup = PED.GET_PED_GROUP_INDEX(self.get_ped())
+          if not PED.DOES_GROUP_EXIST(myGroup) then
+            myGroup = PED.CREATE_GROUP(0)
+          end
           script.run_in_fiber(function()
               while not STREAMING.HAS_MODEL_LOADED(npcData.hash) do
                   STREAMING.REQUEST_MODEL(npcData.hash)
@@ -997,10 +987,10 @@ script.register_looped("side features", function(script)
               PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, false)
               PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, false)
               MOBILE.CELL_SET_INPUT(5)
-					else
-						PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, true)
-						PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, true)
-						PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, true)
+        else
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, true)
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, true)
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, true)
           end
       end
   end
@@ -1132,31 +1122,31 @@ script.register_looped("animation hotkey", function(script)
           gui.show_message("Current Animation:", info.name)
           script:sleep(200)
       elseif PAD.IS_CONTROL_PRESSED(0, 316) and anim_index == 0 then
-              info = filteredAnims[anim_index + 1]
-              gui.show_warning("Current Animation:", info.name.."\n\nYou have reached the top of the list.")
-              script:sleep(400)
+            info = filteredAnims[anim_index + 1]
+            gui.show_warning("Current Animation:", info.name.."\n\nYou have reached the top of the list.")
+            script:sleep(400)
       end
       if PAD.IS_CONTROL_PRESSED(0, 256) then
         if not is_playing_anim then
           if info ~= nil then
-						local coords = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
-						local heading = ENTITY.GET_ENTITY_HEADING(self.get_ped())
-						local forwardX = ENTITY.GET_ENTITY_FORWARD_X(self.get_ped())
-						local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(self.get_ped())
-						local boneIndex = PED.GET_PED_BONE_INDEX(self.get_ped(), info.boneID)
-						local bonecoords = PED.GET_PED_BONE_COORDS(self.get_ped(), info.boneID)
-						if manualFlags then
-								setmanualflag()
-						else
-								flag = info.flag
-						end
-						playSelected(self.get_ped(), selfprop1, selfprop2, selfloopedFX, selfSexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords, "self", plyrProps, selfPTFX)
-						script:sleep(200)
+            local coords = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
+            local heading = ENTITY.GET_ENTITY_HEADING(self.get_ped())
+            local forwardX = ENTITY.GET_ENTITY_FORWARD_X(self.get_ped())
+            local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(self.get_ped())
+            local boneIndex = PED.GET_PED_BONE_INDEX(self.get_ped(), info.boneID)
+            local bonecoords = PED.GET_PED_BONE_COORDS(self.get_ped(), info.boneID)
+            if manualFlags then
+                setmanualflag()
+            else
+                flag = info.flag
+            end
+            playSelected(self.get_ped(), selfprop1, selfprop2, selfloopedFX, selfSexPed, boneIndex, coords, heading, forwardX, forwardY, bonecoords, "self", plyrProps, selfPTFX)
+            script:sleep(200)
           end
 				else
-						PAD.SET_CONTROL_SHAKE(0, 500, 250)
-						gui.show_message("YimActions", "Press "..stopButton.." to stop the current animation before playing the next one.")
-						script:sleep(800)
+                    PAD.SET_CONTROL_SHAKE(0, 500, 250)
+                    gui.show_message("YimActions", "Press "..stopButton.." to stop the current animation before playing the next one.")
+                    script:sleep(800)
 				end
       end
   end
@@ -1173,4 +1163,18 @@ script.register_looped("animation hotkey", function(script)
 			end
 		end
 	end
+    if spawned_npcs[1] ~= nil then
+        for _, npc in ipairs(spawned_npcs) do
+            local myPos    = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
+            local fwdX     = ENTITY.GET_ENTITY_FORWARD_X(self.get_ped())
+            local fwdY     = ENTITY.GET_ENTITY_FORWARD_Y(self.get_ped())
+            local npcPos   = ENTITY.GET_ENTITY_COORDS(npc, false)
+            local distCalc = SYSTEM.VDIST(myPos.x, myPos.y, myPos.z, npcPos.x, npcPos.y, npcPos.z)
+            if distCalc > 100 then
+                script:sleep(1000)
+                TASK.CLEAR_PED_TASKS(npc)
+                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(npc, myPos.x - (fwdX * 2), myPos.y - (fwdY * 2), myPos.z, true, false, false)
+            end
+        end
+    end
 end)
