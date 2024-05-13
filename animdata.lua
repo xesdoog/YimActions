@@ -1,6 +1,12 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 
 animlist =  {
+    { dict = "move_jump", anim = "jump_launch_r_to_skydive", name = "Action: Jump Out 1", flag = 34},
+    { dict = "oddjobs@bailbond_mountain", anim = "base_jump_run", name = "Action: Jump Out 2", flag = 34},
+    { dict = "move_jump@beastjump", anim = "jump_launch_l", name = "Action: Beast Jump", flag = 34},
+    { dict = "anim@veh@btype@side_ds@base", anim = "jump_out", name = "Action: Jump to Left", flag = 34},
+    { dict = "anim@amb@yacht@rail@standing@female@variant_01@", anim = "base", name = "MISC: Front Lean On Rail/Hug (female)", flag = 47},
+    { dict = "anim@amb@yacht@rail@standing@male@variant_01@", anim = "base", name = "MISC: Front Lean On Rail/Hug 2 (male)", flag = 47},
     { dict = "amb@world_human_drinking@beer@male@idle_a", anim = "idle_a", name = "MISC: Drink Beer", prop1 = 2010247122, boneID = 28422, posx = 0.0, posy = 0.0, posz = 0.0, rotx = 0.0, roty = 0.0, rotz = 0.0, flag = 49, ptfxOffx = 0.0, ptfxOffy = 0.0, ptfxOffz = 0.0, ptfxrotx = 0.0, ptfxroty = 0.0, ptfxrotz = 0.0, type = 1, propColl = true, prop2 = 0},
     { dict = "amb@world_human_drinking@coffee@male@idle_a", anim = "idle_c", name = "MISC: Drink Coffee", prop1 = 4161278897, boneID = 64096, posx = 0.01, posy = 0.055, posz = -0.005, rotx = -15.0, roty = 5.0, rotz = -87.0, flag = 49, ptfxOffx = 0.0, ptfxOffy = 0.0, ptfxOffz = 0.0, ptfxrotx = 0.0, ptfxroty = 0.0, ptfxrotz = 0.0, type = 1, propColl = true, prop2 = 0},
     { dict = "amb@code_human_wander_eating_donut@male@base", anim = "static", name = "MISC: Eat Donut", prop1 = 3992024553, boneID = 64096, posx = 0.06, posy = 0.05, posz = 0.02, rotx = -90.0, roty = 180.0, rotz = 0.0, flag = 49, ptfxOffx = 0.0, ptfxOffy = 0.0, ptfxOffz = 0.0, ptfxrotx = 0.0, ptfxroty = 0.0, ptfxrotz = 0.0, type = 1, propColl = true, prop2 = 0},
