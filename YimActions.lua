@@ -1,43 +1,59 @@
 ---@diagnostic disable: undefined-global, lowercase-global
 YimActions = gui.get_tab("Samurai's YimActions")
 require ("animdata")
-json = json()
--- local debug = false
-local anim_index 	= 0
-local scenario_index = 0
-local npc_index = 0
-local switch = 0
-local filteredAnims = {}
+local filteredAnims     = {}
 local filteredScenarios = {}
--- local favorites = {}
-local searchQuery = ""
-local is_typing = false
-local searchBar = true
-local x = 0
-local counter = 0
-local clumsy = false
-local rod = false
-local npc_blips = {}
-plyrProps = {}
-npcProps = {}
-selfPTFX = {}
-npcPTFX = {}
-spawned_npcs = {}
-is_playing_anim = false
-is_playing_scenario = false
-default_config = {disableTooltips = false, phoneAnim = false, disableProps = false, sprintInside = false, lockpick = false, manualFlags = false, controllable = false, looped = false, upperbody = false, freeze = false, usePlayKey = false}
-disableProps = readFromConfig("disableProps")
-npc_godMode = readFromConfig("npc_godMode")
-local disableTooltips = readFromConfig("disableTooltips")
-local phoneAnim = readFromConfig("phoneAnim")
-local sprintInside = readFromConfig("sprintInside")
-local lockPick = readFromConfig("lockPick")
-local manualFlags = readFromConfig("manualFlags")
-local controllable = readFromConfig("controllable")
-local looped = readFromConfig("looped")
-local upperbody = readFromConfig("upperbody")
-local freeze = readFromConfig("freeze")
-local usePlayKey = readFromConfig("usePlayKey")
+local npc_blips         = {}
+local plyrProps         = {}
+local npcProps          = {}
+local selfPTFX          = {}
+local npcPTFX           = {}
+local spawned_npcs      = {}
+default_config          = {
+       disableTooltips  = false,
+       phoneAnim        = false,
+       disableProps     = false,
+       sprintInside     = false,
+       lockpick         = false,
+       manualFlags      = false,
+       controllable     = false,
+       looped           = false,
+       upperbody        = false,
+       freeze           = false,
+       usePlayKey       = false,
+       replaceSneakAnim = false
+}
+json                    = json()
+local phoneAnim         = readFromConfig("phoneAnim")
+local sprintInside      = readFromConfig("sprintInside")
+local lockPick          = readFromConfig("lockPick")
+local manualFlags       = readFromConfig("manualFlags")
+local controllable      = readFromConfig("controllable")
+local looped            = readFromConfig("looped")
+local upperbody         = readFromConfig("upperbody")
+local freeze            = readFromConfig("freeze")
+local usePlayKey        = readFromConfig("usePlayKey")
+local replaceSneakAnim  = readFromConfig("replaceSneakAnim")
+disableProps            = readFromConfig("disableProps")
+npc_godMode             = readFromConfig("npc_godMode")
+disableTooltips         = readFromConfig("disableTooltips")
+is_playing_anim         = false
+is_playing_scenario     = false
+local is_typing         = false
+local clumsy            = false
+local rod               = false
+local isCrouched        = false
+local searchBar         = true
+local anim_index        = 0
+local scenario_index    = 0
+local npc_index         = 0
+local switch            = 0
+local x                 = 0
+local counter           = 0
+local searchQuery       = ""
+local currentMvmt       = ""
+local currentStrf       = ""
+local currentWmvmt      = ""
 script.register_looped("game input", function()
   if is_typing then
     PAD.DISABLE_ALL_CONTROL_ACTIONS(0)
@@ -109,11 +125,18 @@ local function setmanualflag()
 end
 local function setdrunk()
   script.run_in_fiber(function()
-		while not STREAMING.HAS_CLIP_SET_LOADED("MOVE_M@DRUNK@VERYDRUNK") do
-			STREAMING.REQUEST_CLIP_SET("MOVE_M@DRUNK@VERYDRUNK")
+		while not STREAMING.HAS_CLIP_SET_LOADED("move_m@drunk@verydrunk") and not STREAMING.HAS_CLIP_SET_LOADED("move_strafe@first_person@drunk") do
+			STREAMING.REQUEST_CLIP_SET("move_m@drunk@verydrunk")
+			STREAMING.REQUEST_CLIP_SET("move_strafe@first_person@drunk")
 			coroutine.yield()
 		end
-      PED.SET_PED_MOVEMENT_CLIPSET(self.get_ped(), "MOVE_M@DRUNK@VERYDRUNK", 1.0)
+      PED.SET_PED_MOVEMENT_CLIPSET(self.get_ped(), "move_m@drunk@verydrunk", 1.0)
+      PED.SET_PED_WEAPON_MOVEMENT_CLIPSET(self.get_ped(), "move_m@drunk@verydrunk")
+      PED.SET_PED_STRAFE_CLIPSET(self.get_ped(), "move_strafe@first_person@drunk")
+      WEAPON.SET_WEAPON_ANIMATION_OVERRIDE(self.get_ped(), 2231620617)
+      currentMvmt  = "move_m@drunk@verydrunk"
+      currentWmvmt = "move_m@drunk@verydrunk"
+      currentStrf  = "move_strafe@first_person@drunk"
   end)
 end
 local function sethoe()
@@ -122,16 +145,29 @@ local function sethoe()
           STREAMING.REQUEST_CLIP_SET("move_f@maneater")
           coroutine.yield()
       end
+      PED.RESET_PED_WEAPON_MOVEMENT_CLIPSET(self.get_ped())
+      PED.RESET_PED_STRAFE_CLIPSET(self.get_ped())
       PED.SET_PED_MOVEMENT_CLIPSET(self.get_ped(), "move_f@maneater", 1.0)
+      WEAPON.SET_WEAPON_ANIMATION_OVERRIDE(self.get_ped(), 1830115867)
+      currentMvmt  = "move_f@maneater"
+      currentWmvmt = ""
+      currentStrf  = ""
   end)
 end
-local function setcrouched()
+local function setgangsta()
   script.run_in_fiber(function()
-      while not STREAMING.HAS_CLIP_SET_LOADED("move_ped_crouched") do
-          STREAMING.REQUEST_CLIP_SET("move_ped_crouched")
+      while not STREAMING.HAS_CLIP_SET_LOADED("move_m@gangster@ng") and not STREAMING.HAS_CLIP_SET_LOADED("move_strafe@gang") do
+          STREAMING.REQUEST_CLIP_SET("move_m@gangster@ng")
+          STREAMING.REQUEST_CLIP_SET("move_strafe@gang")
           coroutine.yield()
       end
-      PED.SET_PED_MOVEMENT_CLIPSET(self.get_ped(), "move_ped_crouched", 0.3)
+      PED.RESET_PED_WEAPON_MOVEMENT_CLIPSET(self.get_ped())
+      PED.SET_PED_MOVEMENT_CLIPSET(self.get_ped(), "move_m@gangster@ng", 0.3)
+      PED.SET_PED_STRAFE_CLIPSET(self.get_ped(), "move_strafe@gang")
+      WEAPON.SET_WEAPON_ANIMATION_OVERRIDE(self.get_ped(), 1917483703)
+      currentMvmt = "move_m@gangster@ng"
+      currentStrf = "move_strafe@gang"
+      currentWmvmt = ""
   end)
 end
 local function setlester()
@@ -140,32 +176,46 @@ local function setlester()
           STREAMING.REQUEST_CLIP_SET("move_heist_lester")
           coroutine.yield()
       end
+      PED.RESET_PED_WEAPON_MOVEMENT_CLIPSET(self.get_ped())
+      PED.RESET_PED_STRAFE_CLIPSET(self.get_ped())
       PED.SET_PED_MOVEMENT_CLIPSET(self.get_ped(), "move_heist_lester", 0.4)
+      WEAPON.SET_WEAPON_ANIMATION_OVERRIDE(self.get_ped(), 2231620617)
+      currentMvmt  = "move_heist_lester"
+      currentWmvmt = ""
+      currentStrf  = ""
   end)
 end
 local function setballistic()
   script.run_in_fiber(function()
-      while not STREAMING.HAS_CLIP_SET_LOADED("anim_group_move_ballistic") do
+      while not STREAMING.HAS_CLIP_SET_LOADED("anim_group_move_ballistic") and not STREAMING.HAS_CLIP_SET_LOADED("move_strafe@ballistic") do
           STREAMING.REQUEST_CLIP_SET("anim_group_move_ballistic")
+          STREAMING.REQUEST_CLIP_SET("move_strafe@ballistic")
           coroutine.yield()
       end
+      PED.RESET_PED_WEAPON_MOVEMENT_CLIPSET(self.get_ped())
       PED.SET_PED_MOVEMENT_CLIPSET(self.get_ped(), "anim_group_move_ballistic", 1)
+      PED.SET_PED_STRAFE_CLIPSET(self.get_ped(), "move_strafe@ballistic")
+      WEAPON.SET_WEAPON_ANIMATION_OVERRIDE(self.get_ped(), 1429513766)
+      currentMvmt = "anim_group_move_ballistic"
+      currentStrf = "move_strafe@ballistic"
+      currentWmvmt = ""
   end)
 end
 function resetCheckBoxes()
   disableTooltips = false
-  phoneAnim = false
-  lockPick = false
-  sprintInside = false
-  clumsy = false
-  rod = false
-  disableProps = false
-  manualFlags = false
-  controllable = false
-  looped = false
-  upperbody = false
-  freeze = false
-  usePlayKey = false
+  phoneAnim       = false
+  lockPick        = false
+  sprintInside    = false
+  clumsy          = false
+  rod             = false
+  disableProps    = false
+  manualFlags     = false
+  controllable    = false
+  looped          = false
+  upperbody       = false
+  freeze          = false
+  usePlayKey      = false
+  npc_godMode     = false
 end
 script.register_looped("Ragdoll Loop", function(script)
   script:yield()
@@ -299,8 +349,18 @@ YimActions:add_imgui(function()
       if ImGui.Button("   Stop   ") then
           if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
               cleanup()
-              local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
-              PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, -1)
+              local veh = PED.GET_VEHICLE_PED_IS_IN(self.get_ped())
+              local maxVehSeats = VEHICLE.GET_VEHICLE_MODEL_NUMBER_OF_SEATS(ENTITY.GET_ENTITY_MODEL(veh))
+              local mySeat
+              for i = -1, maxVehSeats do
+                if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
+                    local sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(i)
+                    if sittingPed == self.get_ped() then
+                        mySeat = i
+                    end
+                end
+                PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, mySeat)
+              end
           else
               cleanup()
               local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
@@ -376,7 +436,13 @@ YimActions:add_imgui(function()
       local isChanged = false
       switch, isChanged = ImGui.RadioButton("Normal", switch, 0)
       if isChanged then
-          PED.RESET_PED_MOVEMENT_CLIPSET(self.get_ped(), 0.0)
+          PED.RESET_PED_MOVEMENT_CLIPSET(self.get_ped(), 0.3)
+          PED.RESET_PED_STRAFE_CLIPSET(self.get_ped())
+          PED.RESET_PED_WEAPON_MOVEMENT_CLIPSET(self.get_ped())
+          WEAPON.SET_WEAPON_ANIMATION_OVERRIDE(self.get_ped(), 3839837909)
+          currentMvmt  = ""
+          currentStrf  = ""
+          currentWmvmt = ""
           isChanged = false
       end
       ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
@@ -386,13 +452,12 @@ YimActions:add_imgui(function()
       ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
       switch, isChanged = ImGui.RadioButton("Hoe", switch, 2)
       if isChanged then sethoe() end
-      switch, isChanged = ImGui.RadioButton("Crouch", switch, 3)
-      widgetToolTip(false, "You can pair this with the default stealth action [LEFT CTRL].")
-      if isChanged then setcrouched() end
-      ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
-      switch, isChanged = ImGui.RadioButton("Lester", switch, 4)
+      switch, isChanged = ImGui.RadioButton("Gangsta ", switch, 3)
+      if isChanged then setgangsta() end
+      ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+      switch, isChanged = ImGui.RadioButton(" Lester ", switch, 4)
       if isChanged then setlester() end
-      ImGui.SameLine() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
+      ImGui.SameLine() ImGui.Spacing() ImGui.SameLine()
       switch, isChanged = ImGui.RadioButton("Heavy", switch, 5)
       if isChanged then setballistic() end
       ImGui.Separator()
@@ -437,7 +502,7 @@ YimActions:add_imgui(function()
         end)
       end
       ImGui.SameLine()
-      npc_godMode, used = ImGui.Checkbox("Invincibe", npc_godMode, true)
+      npc_godMode, used = ImGui.Checkbox("Invincible", npc_godMode, true)
       if used then
           saveToConfig("npc_godMode", npc_godMode)
       end
@@ -545,111 +610,26 @@ YimActions:add_imgui(function()
       end
       ImGui.SameLine()
       if ImGui.Button("Stop NPC") then
-        local seat = 0
+        cleanupNPC()
+        local npcSeat
         for _, v in ipairs(spawned_npcs) do
             script.run_in_fiber(function()
               if PED.IS_PED_IN_ANY_VEHICLE(v, false) then
-                local veh = PED.GET_VEHICLE_PED_IS_IN(self.get_ped(), false)
+                local veh = PED.GET_VEHICLE_PED_IS_IN(v, false)
                 local maxSeats = VEHICLE.GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(veh)
                 for i = 0, maxSeats do
                   if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
                     sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, false)
                     if sittingPed == v then
-                      seat = i
+                      npcSeat = i
                     end
                   end
                 end
+                PED.SET_PED_INTO_VEHICLE(v, veh, npcSeat)
               end
             end)
           end
-        cleanupNPC()
-        PED.SET_PED_INTO_VEHICLE(v, veh, seat)
       end
-      event.register_handler(menu_event.ScriptsReloaded, function()
-          PED.RESET_PED_MOVEMENT_CLIPSET(self.get_ped(), 0.0)
-          PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), false)
-          if is_playing_anim then
-              TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
-              STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-              STREAMING.REMOVE_ANIM_DICT(info.dict)
-              if selfPTFX ~= nil then
-                  for k, v in ipairs(selfPTFX) do
-                      GRAPHICS.STOP_PARTICLE_FX_LOOPED(v)
-                      table.remove(selfPTFX, k)
-                  end
-              end
-          -- //fix player clipping through the ground after ending low-positioned anims//
-              local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
-              if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
-                  local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
-                  PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, -1)
-              else
-                  ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
-              end
-              is_playing_anim = false
-              if plyrProps[1] ~= nil then
-                  for k, v in ipairs(plyrProps) do
-                      if ENTITY.DOES_ENTITY_EXIST(v) then
-                          ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
-                          script:sleep(100)
-                          ENTITY.DELETE_ENTITY(v)
-                      end
-                      table.remove(plyrProps, k)
-                  end
-              end
-          end
-          if spawned_npcs[1] ~= nil then
-              cleanupNPC()
-              for k, v in ipairs(spawned_npcs) do
-                  if ENTITY.DOES_ENTITY_EXIST(v) then
-                      ENTITY.DELETE_ENTITY(v)
-                  end
-                  table.remove(spawned_npcs, k)
-              end
-          end
-      end)
-      event.register_handler(menu_event.MenuUnloaded, function()
-          PED.RESET_PED_MOVEMENT_CLIPSET(self.get_ped(), 0.0)
-          PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), false)
-          if is_playing_anim then
-              TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
-              STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
-              STREAMING.REMOVE_ANIM_DICT(info.dict)
-              if selfPTFX ~= nil then
-                  for k, v in ipairs(selfPTFX) do
-                      GRAPHICS.STOP_PARTICLE_FX_LOOPED(v)
-                      table.remove(selfPTFX, k)
-                  end
-              end
-          -- //fix player clipping through the ground after ending low-positioned anims//
-              local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
-              if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
-                  local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
-                  PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, -1)
-              else
-                  ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
-              end
-              is_playing_anim = false
-              if plyrProps[1] ~= nil then
-                  for k, v in ipairs(plyrProps) do
-                      if ENTITY.DOES_ENTITY_EXIST(v) then
-                          ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
-                          script:sleep(100)
-                          ENTITY.DELETE_ENTITY(v)
-                      end
-                      table.remove(plyrProps, k)
-                  end
-              end
-          end
-          if spawned_npcs[1] ~= nil then
-              for k, v in ipairs(spawned_npcs) do
-                  if ENTITY.DOES_ENTITY_EXIST(v) then
-                      ENTITY.DELETE_ENTITY(v)
-                  end
-                  table.remove(spawned_npcs, k)
-              end
-          end
-      end)
       ImGui.EndTabItem()
   end
   if ImGui.BeginTabItem("Scenarios") then
@@ -728,7 +708,7 @@ YimActions:add_imgui(function()
       displayNpcs()
       ImGui.PopItemWidth()
       ImGui.SameLine()
-      npc_godMode, used = ImGui.Checkbox("Invincibe", npc_godMode, true)
+      npc_godMode, used = ImGui.Checkbox("Invincible", npc_godMode, true)
       widgetToolTip(false, "Spawn NPCs in God Mode.")
       local npcData = filteredNpcs[npc_index + 1]
       if ImGui.Button("Spawn") then
@@ -860,41 +840,6 @@ YimActions:add_imgui(function()
               end)
           end
       end
-      event.register_handler(menu_event.ScriptsReloaded, function()
-          if is_playing_scenario then
-              TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
-              TASK.CLEAR_PED_TASKS_IMMEDIATELY(npc)
-              is_playing_scenario = false
-              if ENTITY.DOES_ENTITY_EXIST(bbq) then
-                  ENTITY.DELETE_ENTITY(bbq)
-              end
-              if spawned_npcs[1] ~= nil then
-                  for k, v in ipairs(spawned_npcs) do
-                      if ENTITY.DOES_ENTITY_EXIST(v) then
-                          ENTITY.DELETE_ENTITY(v)
-                      end
-                      table.remove(spawned_npcs, k)
-                  end
-              end
-          end
-      end)
-      event.register_handler(menu_event.MenuUnloaded, function()
-          if is_playing_scenario then
-              TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
-              is_playing_scenario = false
-              if ENTITY.DOES_ENTITY_EXIST(bbq) then
-                  ENTITY.DELETE_ENTITY(bbq)
-              end
-              if spawned_npcs[1] ~= nil then
-                  for k, v in ipairs(spawned_npcs) do
-                      if ENTITY.DOES_ENTITY_EXIST(v) then
-                          ENTITY.DELETE_ENTITY(v)
-                      end
-                      table.remove(spawned_npcs, k)
-                  end
-              end
-          end
-      end)
       ImGui.EndTabItem()
   end
   local function progressBar()
@@ -951,6 +896,11 @@ YimActions:add_imgui(function()
               ImGui.EndTooltip()
           end
       end
+      replaceSneakAnim, used = ImGui.Checkbox("Crouch Instead of Sneak", replaceSneakAnim, true)
+      if used then
+        saveToConfig("replaceSneakAnim", replaceSneakAnim)
+      end
+      helpmarker(false, "Replace stealth mode's sneaking animation (Left CTRL) with crouching.")
       ImGui.Spacing() ImGui.SameLine() ImGui.Spacing() ImGui.Spacing() ImGui.SameLine() ImGui.Spacing()
       ImGui.Separator()
       if Button("Reset Settings", {142, 0, 0, 1}, {142, 0, 0, 0.7}, {142, 0, 0, 0.5}) then
@@ -980,9 +930,50 @@ YimActions:add_imgui(function()
 end)
 script.register_looped("side features", function(script)
   script:yield()
+  if replaceSneakAnim then
+    PAD.DISABLE_CONTROL_ACTION(0, 36)
+    PED.SET_PED_STEALTH_MOVEMENT(self.get_ped(), 0, 0)
+    PED.SET_PED_USING_ACTION_MODE(self.get_ped(), false, -1, 0)
+  end
+  if PED.IS_PED_ON_FOOT(self.get_ped()) and not ENTITY.IS_ENTITY_IN_WATER(self.get_ped()) then
+    if replaceSneakAnim then
+        if not isCrouched and PAD.IS_DISABLED_CONTROL_PRESSED(0, 36) then
+            script:sleep(200)
+            while not STREAMING.HAS_CLIP_SET_LOADED("move_ped_crouched") and not STREAMING.HAS_CLIP_SET_LOADED("move_aim_strafe_crouch_2h") do
+                STREAMING.REQUEST_CLIP_SET("move_ped_crouched")
+                STREAMING.REQUEST_CLIP_SET("move_aim_strafe_crouch_2h")
+                coroutine.yield()
+            end
+            PED.SET_PED_MOVEMENT_CLIPSET(self.get_ped(), "move_ped_crouched", 0.3)
+            PED.SET_PED_STRAFE_CLIPSET(self.get_ped(), "move_aim_strafe_crouch_2h")
+            script:sleep(500)
+            isCrouched = true
+        end
+    end
+    if isCrouched and PAD.IS_DISABLED_CONTROL_PRESSED(0, 36) then
+        script:sleep(200)
+        if currentMvmt ~= "" then
+            PED.SET_PED_MOVEMENT_CLIPSET(self.get_ped(), currentMvmt, 0.3)
+        else
+            PED.RESET_PED_MOVEMENT_CLIPSET(self.get_ped(), 0.3)
+        end
+        if currentStrf ~= "" then
+            PED.SET_PED_STRAFE_CLIPSET(self.get_ped(), currentStrf)
+        else
+            PED.RESET_PED_STRAFE_CLIPSET(self.get_ped())
+        end
+        if currentWmvmt ~= "" then
+            PED.SET_PED_WEAPON_MOVEMENT_CLIPSET(self.get_ped(), currentWmvmt)
+        else
+            PED.RESET_PED_WEAPON_MOVEMENT_CLIPSET(self.get_ped())
+        end
+        script:sleep(500)
+        isCrouched = false
+    end
+  end
   if phoneAnim and NETWORK.NETWORK_IS_SESSION_ACTIVE() then
-      if not ENTITY.IS_ENTITY_DEAD(self.get_ped()) then
-          if not is_playing_anim and not is_playing_scenario then
+    if not ENTITY.IS_ENTITY_DEAD(self.get_ped()) then
+        if not is_playing_anim and not is_playing_scenario then
               PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, false)
               PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, false)
               PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, false)
@@ -991,8 +982,12 @@ script.register_looped("side features", function(script)
             PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, true)
             PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, true)
             PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, true)
-          end
-      end
+        end
+    end
+  else
+    PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, true)
+    PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, true)
+    PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, true)
   end
   if sprintInside then
       PED.SET_PED_CONFIG_FLAG(self.get_ped(), 427, true)
@@ -1025,83 +1020,51 @@ script.register_looped("scenario hotkey", function(hotkey)
       end
   end
 end)
-
-function helpmarker(colorFlag, text, color)
-  if not disableTooltips then
-      ImGui.SameLine()
-      ImGui.TextDisabled("(?)")
-      if ImGui.IsItemHovered() then
-          ImGui.SetNextWindowBgAlpha(0.75)
-          ImGui.BeginTooltip()
-          if colorFlag == true then
-              coloredText(text, color)
-          else
-              ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
-              ImGui.TextWrapped(text)
-              ImGui.PopTextWrapPos()
-          end
-          ImGui.EndTooltip()
-      end
-  end
-end
-
-function widgetToolTip(colorFlag, text, color)
-if not disableTooltips then
-  if ImGui.IsItemHovered() then
-      ImGui.SetNextWindowBgAlpha(0.75)
-      ImGui.BeginTooltip()
-      if colorFlag == true then
-          coloredText(text, color)
-      else
-          ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
-          ImGui.TextWrapped(text)
-          ImGui.PopTextWrapPos()
-      end
-      ImGui.EndTooltip()
-  end
-end
-end
-
 script.register_looped("animation hotkey", function(script)
   script:yield()
   if is_playing_anim then
-      if spawned_npcs[1] ~= nil then
-          if PAD.IS_CONTROL_PRESSED(0, 47) then
-              cleanup()
-              cleanupNPC()
-              for _, v in ipairs(spawned_npcs) do
-                  if PED.IS_PED_IN_ANY_VEHICLE(v, false) then
-                      local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
-                      for i = 0, 4 do
-                          if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
-                              sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, false)
-                              if sittingPed == v then
-                                  seat = i
-                              end
-                          end
-                          PED.SET_PED_INTO_VEHICLE(v, veh, seat)
-                      end
-                  end
-              end
-              if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
-                  local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
-                  cleanup()
-                  PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, -1)
-              else
-                  cleanup()
-                  local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
-                  ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
-              end
-              is_playing_anim = false
-          end
-      else
-          if PAD.IS_CONTROL_PRESSED(0, 47) then
-              cleanup()
-              local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
-              ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
-              is_playing_anim = false
-          end
-      end
+    if PAD.IS_CONTROL_PRESSED(0, 47) then
+        cleanup()
+        cleanupNPC()
+        if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
+            local veh = PED.GET_VEHICLE_PED_IS_IN(self.get_ped(), false)
+            local maxVehSeats = VEHICLE.GET_VEHICLE_MODEL_NUMBER_OF_SEATS(ENTITY.GET_ENTITY_MODEL(veh))
+            local mySeat
+            local npcSeat
+            is_playing_anim = false
+            for i = -1, maxVehSeats do
+                if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
+                    local sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, false)
+                    if sittingPed == self.get_ped() then
+                        mySeat = i
+                    end
+                end
+                PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, mySeat)
+            end
+            if spawned_npcs[1] ~= nil then
+                for _, v in ipairs(spawned_npcs) do
+                    if PED.IS_PED_IN_ANY_VEHICLE(v, false) then
+                        for i = 0, maxVehSeats do
+                            if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
+                                local sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, false)
+                                if sittingPed == v then
+                                    npcSeat = i
+                                end
+                            end
+                            PED.SET_PED_INTO_VEHICLE(v, veh, npcSeat)
+                        end
+                    else
+                        local current_NPCcoords = ENTITY.GET_ENTITY_COORDS(v)
+                        ENTITY.SET_ENTITY_COORDS_NO_OFFSET(v, current_NPCcoords.x, current_NPCcoords.y, current_NPCcoords.z, true, false, false)
+                    end
+                end
+            end
+        else
+            local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
+            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
+            is_playing_anim = false
+        end
+    end
   end
   if usePlayKey and info ~= nil then
       if PAD.IS_CONTROL_PRESSED(0, 317) then
@@ -1174,6 +1137,136 @@ script.register_looped("animation hotkey", function(script)
                 script:sleep(1000)
                 TASK.CLEAR_PED_TASKS(npc)
                 ENTITY.SET_ENTITY_COORDS_NO_OFFSET(npc, myPos.x - (fwdX * 2), myPos.y - (fwdY * 2), myPos.z, true, false, false)
+            end
+        end
+    end
+end)
+event.register_handler(menu_event.ScriptsReloaded, function()
+    PED.RESET_PED_MOVEMENT_CLIPSET(self.get_ped(), 0.0)
+    PED.RESET_PED_WEAPON_MOVEMENT_CLIPSET(self.get_ped())
+    PED.RESET_PED_STRAFE_CLIPSET(self.get_ped())
+    PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), false)
+    WEAPON.SET_WEAPON_ANIMATION_OVERRIDE(self.get_ped(), 3839837909)
+    currentMvmt  = ""
+    currentStrf  = ""
+    currentWmvmt = ""
+    isCrouched   = false
+    if is_playing_anim then
+        TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
+        STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
+        STREAMING.REMOVE_ANIM_DICT(info.dict)
+        if selfPTFX ~= nil then
+            for k, v in ipairs(selfPTFX) do
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(v)
+                table.remove(selfPTFX, k)
+            end
+        end
+    -- //fix player clipping through the ground after ending low-positioned anims//
+        local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
+        if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
+            local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
+            PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, -1)
+        else
+            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
+        end
+        is_playing_anim = false
+        if plyrProps[1] ~= nil then
+            for k, v in ipairs(plyrProps) do
+                if ENTITY.DOES_ENTITY_EXIST(v) then
+                    ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
+                    script:sleep(100)
+                    ENTITY.DELETE_ENTITY(v)
+                end
+                table.remove(plyrProps, k)
+            end
+        end
+    end
+    if spawned_npcs[1] ~= nil then
+        cleanupNPC()
+        for k, v in ipairs(spawned_npcs) do
+            if ENTITY.DOES_ENTITY_EXIST(v) then
+                ENTITY.DELETE_ENTITY(v)
+            end
+            table.remove(spawned_npcs, k)
+        end
+    end
+    if is_playing_scenario then
+        TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
+        TASK.CLEAR_PED_TASKS_IMMEDIATELY(npc)
+        is_playing_scenario = false
+        if ENTITY.DOES_ENTITY_EXIST(bbq) then
+            ENTITY.DELETE_ENTITY(bbq)
+        end
+        if spawned_npcs[1] ~= nil then
+            for k, v in ipairs(spawned_npcs) do
+                if ENTITY.DOES_ENTITY_EXIST(v) then
+                    ENTITY.DELETE_ENTITY(v)
+                end
+                table.remove(spawned_npcs, k)
+            end
+        end
+    end
+end)
+event.register_handler(menu_event.MenuUnloaded, function()
+    PED.RESET_PED_MOVEMENT_CLIPSET(self.get_ped(), 0.0)
+    PED.RESET_PED_WEAPON_MOVEMENT_CLIPSET(self.get_ped())
+    PED.RESET_PED_STRAFE_CLIPSET(self.get_ped())
+    PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), false)
+    WEAPON.SET_WEAPON_ANIMATION_OVERRIDE(self.get_ped(), 3839837909)
+    currentMvmt  = ""
+    currentStrf  = ""
+    currentWmvmt = ""
+    isCrouched   = false
+    if is_playing_anim then
+        TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
+        STREAMING.REMOVE_NAMED_PTFX_ASSET(info.ptfxdict)
+        STREAMING.REMOVE_ANIM_DICT(info.dict)
+        if selfPTFX ~= nil then
+            for k, v in ipairs(selfPTFX) do
+                GRAPHICS.STOP_PARTICLE_FX_LOOPED(v)
+                table.remove(selfPTFX, k)
+            end
+        end
+    -- //fix player clipping through the ground after ending low-positioned anims//
+        local current_coords = ENTITY.GET_ENTITY_COORDS(self.get_ped())
+        if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
+            local veh = PED.GET_VEHICLE_PED_IS_USING(self.get_ped())
+            PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, -1)
+        else
+            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(self.get_ped(), current_coords.x, current_coords.y, current_coords.z, true, false, false)
+        end
+        is_playing_anim = false
+        if plyrProps[1] ~= nil then
+            for k, v in ipairs(plyrProps) do
+                if ENTITY.DOES_ENTITY_EXIST(v) then
+                    ENTITY.SET_ENTITY_AS_MISSION_ENTITY(v)
+                    script:sleep(100)
+                    ENTITY.DELETE_ENTITY(v)
+                end
+                table.remove(plyrProps, k)
+            end
+        end
+    end
+    if spawned_npcs[1] ~= nil then
+        for k, v in ipairs(spawned_npcs) do
+            if ENTITY.DOES_ENTITY_EXIST(v) then
+                ENTITY.DELETE_ENTITY(v)
+            end
+            table.remove(spawned_npcs, k)
+        end
+    end
+    if is_playing_scenario then
+        TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
+        is_playing_scenario = false
+        if ENTITY.DOES_ENTITY_EXIST(bbq) then
+            ENTITY.DELETE_ENTITY(bbq)
+        end
+        if spawned_npcs[1] ~= nil then
+            for k, v in ipairs(spawned_npcs) do
+                if ENTITY.DOES_ENTITY_EXIST(v) then
+                    ENTITY.DELETE_ENTITY(v)
+                end
+                table.remove(spawned_npcs, k)
             end
         end
     end
