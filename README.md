@@ -50,7 +50,6 @@
 ## Known Issues:
 
 - Some particle effects are not visible to other players. I will probably fix them later but I'm quickly losing passion.
-- If you are not host of the session, you will occasionally lose control over some spawned NPCs if you spawn more than one or two. Those NPCs will not follow you anymore and you can no longer delete them using the script.
 
 ## Credits:
 
