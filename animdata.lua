@@ -367,7 +367,7 @@ function coloredText(text, color)
     ImGui.PushStyleColor(ImGuiCol.Text, color[1]/255, color[2]/255, color[3]/255, color[4])
     ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
     ImGui.TextWrapped(text)
-    ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
+    ImGui.PopTextWrapPos()
     ImGui.PopStyleColor(1)
 end
 
@@ -378,35 +378,39 @@ function busyspinner(text, type)
 end
 
 function helpmarker(colorFlag, text, color)
-    ImGui.SameLine()
-    ImGui.TextDisabled("(?)")
-    if ImGui.IsItemHovered() then
-        ImGui.SetNextWindowBgAlpha(0.75)
-        ImGui.BeginTooltip()
-        if colorFlag == true then
-            coloredText(text, color)
-        else
-            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
-            ImGui.TextWrapped(text)
-            ImGui.PopTextWrapPos()
-        end
-        ImGui.EndTooltip()
-	end
+  if not disableTooltips then
+      ImGui.SameLine()
+      ImGui.TextDisabled("(?)")
+      if ImGui.IsItemHovered() then
+          ImGui.SetNextWindowBgAlpha(0.75)
+          ImGui.BeginTooltip()
+          if colorFlag == true then
+              coloredText(text, color)
+          else
+              ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
+              ImGui.TextWrapped(text)
+              ImGui.PopTextWrapPos()
+          end
+          ImGui.EndTooltip()
+      end
+  end
 end
 
 function widgetToolTip(colorFlag, text, color)
-    if ImGui.IsItemHovered() then
-        ImGui.SetNextWindowBgAlpha(0.75)
-        ImGui.BeginTooltip()
-        if colorFlag == true then
-            coloredText(text, color)
-        else
-            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
-            ImGui.TextWrapped(text)
-            ImGui.PopTextWrapPos()
+    if not disableTooltips then
+        if ImGui.IsItemHovered() then
+            ImGui.SetNextWindowBgAlpha(0.75)
+            ImGui.BeginTooltip()
+            if colorFlag == true then
+                coloredText(text, color)
+            else
+                ImGui.PushTextWrapPos(ImGui.GetFontSize() * 20)
+                ImGui.TextWrapped(text)
+                ImGui.PopTextWrapPos()
+            end
+            ImGui.EndTooltip()
         end
-        ImGui.EndTooltip()
-	end
+    end
 end
 
 function RequestControl(entity, netID, ticks)
