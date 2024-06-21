@@ -1088,11 +1088,22 @@ script.register_looped("side features", function(script)
     end
     if phoneAnim and NETWORK.NETWORK_IS_SESSION_ACTIVE() then
         if not ENTITY.IS_ENTITY_DEAD(self.get_ped()) then
-            if not is_playing_anim and not is_playing_scenario then
-                PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, false)
-                PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, false)
-                PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, false)
-                MOBILE.CELL_SET_INPUT(5)
+            if not is_playing_anim and not is_playing_scenario and PED.COUNT_PEDS_IN_COMBAT_WITH_TARGET(self.get_ped()) == 0 then
+                if PED.GET_PED_CONFIG_FLAG(self.get_ped(), 242) and PED.GET_PED_CONFIG_FLAG(self.get_ped(), 243) and PED.GET_PED_CONFIG_FLAG(self.get_ped(), 244) then
+                    PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, false)
+                    PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, false)
+                    PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, false)
+                else
+                    if AUDIO.IS_MOBILE_PHONE_CALL_ONGOING() then
+                        script:sleep(20)
+                        TASK.TASK_PLAY_PHONE_GESTURE_ANIMATION(self.get_ped(), "anim@scripted@freemode@ig19_mobile_phone@male@", "base", "BONEMASK_HEAD_NECK_AND_R_ARM", 0.25, 0.25, true, false)
+                        repeat
+                            script:sleep(1)
+                        until
+                            AUDIO.IS_MOBILE_PHONE_CALL_ONGOING() == false
+                        TASK.TASK_STOP_PHONE_GESTURE_ANIMATION(self.get_ped(), 0.25)
+                    end
+                end
             else
                 PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, true)
                 PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, true)
