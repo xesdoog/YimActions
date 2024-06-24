@@ -254,7 +254,7 @@ script.register_looped("Ragdoll Loop", function(rgdl)
     if PED.IS_PED_MALE(self.get_ped()) then
         soundName = "WAVELOAD_PAIN_MALE"
     else
-        soundName = "WAVELOAD_PAIN_MALE"
+        soundName = "WAVELOAD_PAIN_FEMALE"
     end
     if clumsy then
         if PED.IS_PED_RAGDOLL(self.get_ped()) then
