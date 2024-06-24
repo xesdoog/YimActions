@@ -234,35 +234,48 @@ local function setballistic()
   end)
 end
 function resetCheckBoxes()
-  disableTooltips = false
-  phoneAnim       = false
-  lockPick        = false
-  sprintInside    = false
-  clumsy          = false
-  rod             = false
-  disableProps    = false
-  manualFlags     = false
-  controllable    = false
-  looped          = false
-  upperbody       = false
-  freeze          = false
-  usePlayKey      = false
-  npc_godMode     = false
+    disableTooltips  = false
+    phoneAnim        = false
+    disableProps     = false
+    sprintInside     = false
+    lockpick         = false
+    manualFlags      = false
+    controllable     = false
+    looped           = false
+    upperbody        = false
+    freeze           = false
+    usePlayKey       = false
+    replaceSneakAnim = false
+    disableSound     = false
+    npc_godMode      = false
 end
-script.register_looped("Ragdoll Loop", function(script)
-  script:yield()
-  if clumsy then
-      if PED.IS_PED_RAGDOLL(self.get_ped()) then
-          script:sleep(2500)
-          return
-      end
-      PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), true)
-  elseif rod then
-      if PAD.IS_CONTROL_PRESSED(0, 252) then
-          PED.SET_PED_TO_RAGDOLL(self.get_ped(), 1500, 0, 0, false)
-      end
-  end
-  script:yield()
+script.register_looped("Ragdoll Loop", function(rgdl)
+    rgdl:yield()
+    if PED.IS_PED_MALE(self.get_ped()) then
+        soundName = "WAVELOAD_PAIN_MALE"
+    else
+        soundName = "WAVELOAD_PAIN_MALE"
+    end
+    if clumsy then
+        if PED.IS_PED_RAGDOLL(self.get_ped()) then
+            rgdl:sleep(2500)
+            return
+        end
+        PED.SET_PED_RAGDOLL_ON_COLLISION(self.get_ped(), true)
+    elseif rod then
+        if PAD.IS_CONTROL_PRESSED(0, 252) then
+            PED.SET_PED_TO_RAGDOLL(self.get_ped(), 1500, 0, 0, false)
+        end
+    end
+    if PED.IS_PED_RAGDOLL(self.get_ped()) then
+        rgdl:sleep(500)
+        local myPos = ENTITY.GET_ENTITY_COORDS(self.get_ped(), true)
+        AUDIO.PLAY_AMBIENT_SPEECH_FROM_POSITION_NATIVE("SCREAM_PANIC_SHORT", soundName, myPos.x, myPos.y, myPos.z, "SPEECH_PARAMS_FORCE_SHOUTED", 0)
+        repeat
+            rgdl:sleep(100)
+        until
+        PED.IS_PED_RAGDOLL(self.get_ped()) == false
+    end
 end)
 script.register_looped("npc stuff", function(npcStuff)
     if spawned_npcs[1] ~= nil then
@@ -345,11 +358,11 @@ YimActions:add_imgui(function()
         end
         if ImGui.Button("   Play   ") then
             widgetSound("Select")
-            local coords = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
-            local heading = ENTITY.GET_ENTITY_HEADING(self.get_ped())
-            local forwardX = ENTITY.GET_ENTITY_FORWARD_X(self.get_ped())
-            local forwardY = ENTITY.GET_ENTITY_FORWARD_Y(self.get_ped())
-            local boneIndex = PED.GET_PED_BONE_INDEX(self.get_ped(), info.boneID)
+            local coords     = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
+            local heading    = ENTITY.GET_ENTITY_HEADING(self.get_ped())
+            local forwardX   = ENTITY.GET_ENTITY_FORWARD_X(self.get_ped())
+            local forwardY   = ENTITY.GET_ENTITY_FORWARD_Y(self.get_ped())
+            local boneIndex  = PED.GET_PED_BONE_INDEX(self.get_ped(), info.boneID)
             local bonecoords = PED.GET_PED_BONE_COORDS(self.get_ped(), info.boneID)
             if manualFlags then
                 setmanualflag()
@@ -364,17 +377,17 @@ YimActions:add_imgui(function()
             widgetSound("Cancel")
             if PED.IS_PED_IN_ANY_VEHICLE(self.get_ped(), false) then
                 cleanup()
-                local veh = PED.GET_VEHICLE_PED_IS_IN(self.get_ped())
+                local veh         = PED.GET_VEHICLE_PED_IS_IN(self.get_ped(), false)
                 local maxVehSeats = VEHICLE.GET_VEHICLE_MODEL_NUMBER_OF_SEATS(ENTITY.GET_ENTITY_MODEL(veh))
                 local mySeat
                 for i = -1, maxVehSeats do
-                if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
-                    local sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(i)
-                    if sittingPed == self.get_ped() then
-                        mySeat = i
+                    if not VEHICLE.IS_VEHICLE_SEAT_FREE(veh, i, true) then
+                        local sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, true)
+                        if sittingPed == self.get_ped() then
+                            mySeat = i
+                        end
                     end
-                end
-                PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, mySeat)
+                    PED.SET_PED_INTO_VEHICLE(self.get_ped(), veh, mySeat)
                 end
             else
                 cleanup()
@@ -626,17 +639,17 @@ YimActions:add_imgui(function()
             for _, v in ipairs(spawned_npcs) do
                 script.run_in_fiber(function()
                     if PED.IS_PED_IN_ANY_VEHICLE(v, false) then
-                    local veh = PED.GET_VEHICLE_PED_IS_IN(v, false)
-                    local maxSeats = VEHICLE.GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(veh)
-                    for i = 0, maxSeats do
-                        if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
-                        sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, false)
-                        if sittingPed == v then
-                            npcSeat = i
+                        local veh      = PED.GET_VEHICLE_PED_IS_IN(v, false)
+                        local maxSeats = VEHICLE.GET_VEHICLE_MAX_NUMBER_OF_PASSENGERS(veh)
+                        for i = 0, maxSeats do
+                            if not VEHICLE.IS_VEHICLE_SEAT_FREE(veh, i, true) then
+                                sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, true)
+                                if sittingPed == v then
+                                    npcSeat = i
+                                end
+                            end
+                            PED.SET_PED_INTO_VEHICLE(v, veh, npcSeat)
                         end
-                        end
-                    end
-                    PED.SET_PED_INTO_VEHICLE(v, veh, npcSeat)
                     end
                 end)
             end
@@ -1086,8 +1099,8 @@ script.register_looped("side features", function(script)
             isCrouched = false
         end
     end
-    if phoneAnim and NETWORK.NETWORK_IS_SESSION_ACTIVE() then
-        if not ENTITY.IS_ENTITY_DEAD(self.get_ped()) then
+    if NETWORK.NETWORK_IS_SESSION_ACTIVE() then
+        if phoneAnim and not ENTITY.IS_ENTITY_DEAD(self.get_ped()) then
             if not is_playing_anim and not is_playing_scenario and PED.COUNT_PEDS_IN_COMBAT_WITH_TARGET(self.get_ped()) == 0 then
                 if PED.GET_PED_CONFIG_FLAG(self.get_ped(), 242) and PED.GET_PED_CONFIG_FLAG(self.get_ped(), 243) and PED.GET_PED_CONFIG_FLAG(self.get_ped(), 244) then
                     PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, false)
@@ -1095,7 +1108,10 @@ script.register_looped("side features", function(script)
                     PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, false)
                 else
                     if AUDIO.IS_MOBILE_PHONE_CALL_ONGOING() then
-                        script:sleep(20)
+                        if not STREAMING.HAS_ANIM_DICT_LOADED("anim@scripted@freemode@ig19_mobile_phone@male@") then
+                            STREAMING.REQUEST_ANIM_DICT("anim@scripted@freemode@ig19_mobile_phone@male@")
+                            return
+                        end
                         TASK.TASK_PLAY_PHONE_GESTURE_ANIMATION(self.get_ped(), "anim@scripted@freemode@ig19_mobile_phone@male@", "base", "BONEMASK_HEAD_NECK_AND_R_ARM", 0.25, 0.25, true, false)
                         repeat
                             script:sleep(1)
@@ -1109,11 +1125,17 @@ script.register_looped("side features", function(script)
                 PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, true)
                 PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, true)
             end
+        else
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, true)
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, true)
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, true)
         end
     else
-        PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, true)
-        PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, true)
-        PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, true)
+        if PED.GET_PED_CONFIG_FLAG(self.get_ped(), 242) and PED.GET_PED_CONFIG_FLAG(self.get_ped(), 243) and PED.GET_PED_CONFIG_FLAG(self.get_ped(), 244) then
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 242, false)
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 243, false)
+            PED.SET_PED_CONFIG_FLAG(self.get_ped(), 244, false)
+        end
     end
     if sprintInside then
         PED.SET_PED_CONFIG_FLAG(self.get_ped(), 427, true)
@@ -1126,14 +1148,14 @@ script.register_looped("side features", function(script)
         PED.SET_PED_CONFIG_FLAG(self.get_ped(), 426, false)
     end
 end)
-script.register_looped("naughty", function(sxsfx)
-    sxsfx:yield()
+script.register_looped("Sound Effects", function(animSfx)
+    animSfx:yield()
     if is_playing_anim then
         local info = filteredAnims[anim_index + 1]
         if info.sfx ~= nil then
             local soundCoords = ENTITY.GET_ENTITY_COORDS(self.get_ped(), true)
-            AUDIO.PLAY_AMBIENT_SPEECH_FROM_POSITION_NATIVE(info.sfx, "S_F_Y_HOOKER_03_BLACK_FULL_01", soundCoords.x, soundCoords.y, soundCoords.z, info.sfxFlg, 0)
-            sxsfx:sleep(10000)
+            AUDIO.PLAY_AMBIENT_SPEECH_FROM_POSITION_NATIVE(info.sfx, info.sfxName, soundCoords.x, soundCoords.y, soundCoords.z, info.sfxFlg, 0)
+            animSfx:sleep(10000)
         end
     end
 end)
@@ -1170,8 +1192,8 @@ script.register_looped("animation hotkey", function(script)
             local npcSeat
             is_playing_anim = false
             for i = -1, maxVehSeats do
-                if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
-                    local sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, false)
+                if not VEHICLE.IS_VEHICLE_SEAT_FREE(veh, i, true) then
+                    local sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, true)
                     if sittingPed == self.get_ped() then
                         mySeat = i
                     end
@@ -1182,8 +1204,8 @@ script.register_looped("animation hotkey", function(script)
                 for _, v in ipairs(spawned_npcs) do
                     if PED.IS_PED_IN_ANY_VEHICLE(v, false) then
                         for i = 0, maxVehSeats do
-                            if VEHICLE.IS_VEHICLE_SEAT_FREE(i) == false then
-                                local sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, false)
+                            if not VEHICLE.IS_VEHICLE_SEAT_FREE(veh, i, true) then
+                                local sittingPed = VEHICLE.GET_PED_IN_VEHICLE_SEAT(veh, i, true)
                                 if sittingPed == v then
                                     npcSeat = i
                                 end
