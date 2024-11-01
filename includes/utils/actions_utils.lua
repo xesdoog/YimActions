@@ -48,7 +48,7 @@ function translateLabel(g)
         break
       end
     end
-    if retStr == nil and retStr == "" then
+    if retStr == nil or retStr == "" then
       if logMsg then
         gui.show_warning("YimActions",
           "Unsupported language or missing label(s) detected! Defaulting to English.")
