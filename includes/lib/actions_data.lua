@@ -636,3 +636,24 @@ cell_inputs_T            = {
   { control = 180, input = 1 },
   { control = 181, input = 2 },
 }
+
+handguns_T               = {
+  0x1B06D571,
+  0xBFE256D4,
+  0x5EF9FEC4,
+  0x22D8FE39,
+  0x3656C8C1,
+  0x99AEEB3B,
+  0xBFD21232,
+  0x88374054,
+  0xD205520E,
+  0x83839C4,
+  0x47757124,
+  0xDC4DB296,
+  0xC1B3C3D1,
+  0xCB96392F,
+  0x97EA20B8,
+  0xAF3696A1,
+  0x2B5EF5EC,
+  0x917F6C8C
+}
