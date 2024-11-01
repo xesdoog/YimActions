@@ -86,6 +86,7 @@ anim_music          = false
 is_setting_hotkeys  = false
 start_loading_anim  = false
 fav_exists          = false
+is_shortcut_anim    = false
 searchBar           = true
 tab1Sound           = true
 tab2Sound           = true
@@ -1393,6 +1394,87 @@ script.register_looped("animation hotkey", function(script)
         ENTITY.DELETE_ENTITY(bbq)
       end
     end
+  end
+end)
+
+script.register_looped("MISC", function(misc)
+  if is_playing_anim then
+    if not curr_playing_anim.autoOff then
+      PED.SET_PED_CAN_SWITCH_WEAPON(self.get_ped(), false)
+    end
+    if WEAPON.IS_PED_ARMED(self.get_ped(), 7) then
+      WEAPON.SET_CURRENT_PED_WEAPON(self.get_ped(), 0xA2719263, false)
+    end
+    if is_playing_anim and str_contains(curr_playing_anim.name, ") (pistol)")  then
+      log.info('true')
+      for _, w in ipairs(handguns_T) do
+        if WEAPON.HAS_PED_GOT_WEAPON(self.get_ped(), w, false) then
+          WEAPON.SET_CURRENT_PED_WEAPON(self.get_ped(), w, true)
+          break
+        end
+      end
+      misc:sleep(555)
+      AUDIO.PLAY_SOUND_FRONTEND(-1, "SNIPER_FIRE", "DLC_BIKER_RESUPPLY_MEET_CONTACT_SOUNDS", true)
+      repeat
+        misc:sleep(100)
+      until ENTITY.IS_ENTITY_PLAYING_ANIM(self.get_ped(), "mp_suicide", "pistol", 3) == false
+      PED.SET_PED_CAN_SWITCH_WEAPON(self.get_ped(), true)
+    end
+    repeat
+      misc:sleep(10)
+    until is_playing_anim == false
+    PED.SET_PED_CAN_SWITCH_WEAPON(self.get_ped(), true)
+    if str_contains(string.lower(curr_playing_anim.name), "in-car") then
+      if PAD.IS_CONTROL_PRESSED(0, 75) or PAD.IS_DISABLED_CONTROL_PRESSED(0, 75) or PED.IS_PED_ON_FOOT(self.get_ped()) then
+        cleanup(misc)
+        is_playing_anim = false
+      end
+    end
+  end
+end)
+
+-- Animation Shotrcut
+script.register_looped("ANIMSC", function(animsc)
+  if shortcut_anim.anim ~= nil and not gui.is_open() then
+    if isKeyJustPressed(shortcut_anim.btn) and not is_typing and not is_setting_hotkeys and not is_playing_anim and not is_playing_scenario then
+      info               = shortcut_anim
+      local mycoords     = ENTITY.GET_ENTITY_COORDS(self.get_ped(), true)
+      local myheading    = ENTITY.GET_ENTITY_HEADING(self.get_ped())
+      local myforwardX   = ENTITY.GET_ENTITY_FORWARD_X(self.get_ped())
+      local myforwardY   = ENTITY.GET_ENTITY_FORWARD_Y(self.get_ped())
+      local myboneIndex  = PED.GET_PED_BONE_INDEX(self.get_ped(), info.boneID)
+      local mybonecoords = PED.GET_PED_BONE_COORDS(self.get_ped(), info.boneID, 0.0, 0.0, 0.0)
+      if is_playing_anim or is_playing_scenario then
+        cleanup(animsc)
+        if ENTITY.DOES_ENTITY_EXIST(bbq) then
+          ENTITY.DELETE_ENTITY(bbq)
+        end
+        is_playing_anim     = false
+        is_playing_scenario = false
+        animsc:sleep(500)
+      end
+      if requestAnimDict(shortcut_anim.dict) then
+        playAnim(shortcut_anim, self.get_ped(), shortcut_anim.flag, selfprop1, selfprop2, selfloopedFX, selfSexPed,
+          myboneIndex, mycoords, myheading, myforwardX, myforwardY, mybonecoords, "self", plyrProps, selfPTFX, animsc
+        )
+        if str_contains(shortcut_anim.name, "DJ") then
+          if not anim_music then
+            play_music("start", "RADIO_22_DLC_BATTLE_MIX1_RADIO")
+            anim_music = true
+          end
+        end
+        animsc:sleep(100)
+        curr_playing_anim = shortcut_anim
+        is_playing_anim  = true
+        is_shortcut_anim = true
+      end
+    end
+  end
+  if is_shortcut_anim and isKeyJustPressed(shortcut_anim.btn) then
+    animsc:sleep(100)
+    cleanup(animsc)
+    is_playing_anim  = false
+    is_shortcut_anim = false
   end
 end)
 
