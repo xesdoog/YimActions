@@ -1,6 +1,6 @@
 <h1 align="center"> YimActions </h1>
 
-<h3 align="center"> Play GTA V Animations &amp; Scenarios Using YimMenu </h3>
+<h4 align="center"> Play GTA V Animations &amp; Scenarios Using YimMenu </h3>
 
 <h2 align="center"> Supported Languages </h2>
 
