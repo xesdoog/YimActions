@@ -600,8 +600,8 @@ YimActions:add_imgui(function()
     ImGui.SameLine(); ImGui.BeginDisabled(spawned_npcs[1] == nil)
     if ImGui.Button(string.format("%s##anim_npc", GENERIC_PLAY_BTN_)) then
       script.run_in_fiber(function(npca)
-        if info.cat == "In-Vehicle" and PED.IS_PED_ON_FOOT(self.get_ped())
-          or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh())) then
+        if info.cat == "In-Vehicle" and (PED.IS_PED_ON_FOOT(self.get_ped())
+          or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh()))) then
           widgetSound("Error")
           gui.show_error("YimActions", "This animation can only be played while sitting inside a vehicle (cars and trucks only).")
         else
@@ -858,8 +858,8 @@ YimActions:add_imgui(function()
       if ImGui.Button(string.format("%s##favs", GENERIC_PLAY_BTN_)) then
         script.run_in_fiber(function(pf)
           if selected_favorite.dict ~= nil then -- animation type
-            if selected_favorite.cat == "In-Vehicle" and PED.IS_PED_ON_FOOT(self.get_ped())
-              or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh())) then
+            if selected_favorite.cat == "In-Vehicle" and (PED.IS_PED_ON_FOOT(self.get_ped())
+              or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh()))) then
               widgetSound("Error")
               gui.show_error("YimActions", "This animation can only be played while sitting inside a vehicle (cars and trucks only).")
             else
@@ -938,8 +938,8 @@ YimActions:add_imgui(function()
       if ImGui.Button(string.format("%s##recents", GENERIC_PLAY_BTN_)) then
         script.run_in_fiber(function(pr)
           if selected_recent.dict ~= nil then -- animation type
-            if selected_recent.cat == "In-Vehicle" and PED.IS_PED_ON_FOOT(self.get_ped())
-              or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh())) then
+            if selected_recent.cat == "In-Vehicle" and (PED.IS_PED_ON_FOOT(self.get_ped())
+              or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh()))) then
               widgetSound("Error")
               gui.show_error("YimActions", "This animation can only be played while sitting inside a vehicle (cars and trucks only).")
             else
@@ -1361,8 +1361,8 @@ script.register_looped("animation hotkey", function(script)
       if isKeyJustPressed(keybinds.play_anim.code) and not isBrowsingApps() then
         if not is_playing_anim then
           if info ~= nil then
-            if info.cat == "In-Vehicle" and PED.IS_PED_ON_FOOT(self.get_ped())
-              or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh())) then
+            if info.cat == "In-Vehicle" and (PED.IS_PED_ON_FOOT(self.get_ped())
+              or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh()))) then
               widgetSound("Error")
               gui.show_error("Samurai's Scripts", "This animation can only be played while sitting inside a vehicle (cars and trucks only).")
             else
