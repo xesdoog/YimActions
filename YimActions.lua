@@ -100,6 +100,7 @@ fav_actions_index   = 0
 grp_anim_index      = 0
 npc_index           = 0
 switch              = 0
+anim_sortby_idx     = 0
 x                   = 0
 counter             = 0
 searchQuery         = ""
@@ -117,6 +118,46 @@ require("lib/ya_translations")
 require("lib/actions_data")
 require("utils/actions_utils")
 initStrings()
+
+local animSortbyList <const> = {
+  "All",
+  "Actions",
+  "Activities",
+  "Gestures",
+  "In-Vehicle",
+  "Movements",
+  "MISC",
+  "NSFW",
+}
+
+local function updatefilteredAnims()
+  filteredAnims = {}
+  for _, anim in ipairs(animlist) do
+    if anim_sortby_idx == 0 then
+      if string.find(string.lower(anim.name), string.lower(searchQuery)) then
+        table.insert(filteredAnims, anim)
+      end
+    else
+      if anim.cat == animSortbyList[anim_sortby_idx + 1] then
+        if string.find(string.lower(anim.name), string.lower(searchQuery)) then
+          table.insert(filteredAnims, anim)
+        end
+      end
+    end
+  end
+  table.sort(animlist, function(a, b)
+    return a.name < b.name
+  end)
+end
+
+function displayFilteredAnims()
+  updatefilteredAnims()
+  animNames = {}
+  for _, anim in ipairs(filteredAnims) do
+    table.insert(animNames, anim.name)
+  end
+  anim_index, used = ImGui.ListBox("##animlistbox", anim_index, animNames, #filteredAnims)
+end
 
 local function showSearchBar()
   if searchBar then
@@ -140,7 +181,14 @@ YimActions:add_imgui(function()
       tab2Sound = true
       tab3Sound = true
     end
-    ImGui.PushItemWidth(510) -- whatcha smokin'?
+    ImGui.Spacing(); ImGui.BulletText("Filter Animations: "); ImGui.SameLine()
+    ImGui.PushItemWidth(220)
+    anim_sortby_idx, animSortUsed = ImGui.Combo("##animCategories", anim_sortby_idx, animSortbyList, #animSortbyList)
+    ImGui.PopItemWidth()
+    if animSortUsed then
+      widgetSound("Nav2")
+    end
+    ImGui.Spacing(); ImGui.Separator(); ImGui.PushItemWidth(510)
     displayFilteredAnims()
     ImGui.PopItemWidth()
     if filteredAnims ~= nil then
@@ -189,9 +237,10 @@ YimActions:add_imgui(function()
     end
     if ImGui.Button(string.format("%s##selfAnim", GENERIC_PLAY_BTN_)) then
       script.run_in_fiber(function(pa)
-        if str_contains(string.lower(info.name), "in-car") and PED.IS_PED_ON_FOOT(self.get_ped()) then
+        if info.cat == "In-Vehicle" and (PED.IS_PED_ON_FOOT(self.get_ped())
+          or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh()))) then
           widgetSound("Error")
-          gui.show_error("YimActions", "This animation can only be played while sitting inside a vehicle.")
+          gui.show_error("YimActions", "This animation can only be played while sitting inside a vehicle (cars and trucks only).")
         else
           widgetSound("Select")
           local coords     = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
@@ -551,9 +600,10 @@ YimActions:add_imgui(function()
     ImGui.SameLine(); ImGui.BeginDisabled(spawned_npcs[1] == nil)
     if ImGui.Button(string.format("%s##anim_npc", GENERIC_PLAY_BTN_)) then
       script.run_in_fiber(function(npca)
-        if str_contains(string.lower(info.name), "in-car") and PED.IS_PED_ON_FOOT(self.get_ped()) then
+        if info.cat == "In-Vehicle" and PED.IS_PED_ON_FOOT(self.get_ped())
+          or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh())) then
           widgetSound("Error")
-          gui.show_error("YimActions", "This animation can only be played while sitting inside a vehicle.")
+          gui.show_error("YimActions", "This animation can only be played while sitting inside a vehicle (cars and trucks only).")
         else
           widgetSound("Select")
           for _, v in ipairs(spawned_npcs) do
@@ -808,9 +858,10 @@ YimActions:add_imgui(function()
       if ImGui.Button(string.format("%s##favs", GENERIC_PLAY_BTN_)) then
         script.run_in_fiber(function(pf)
           if selected_favorite.dict ~= nil then -- animation type
-            if str_contains(string.lower(selected_favorite.name), "in-car") and PED.IS_PED_ON_FOOT(self.get_ped()) then
+            if selected_favorite.cat == "In-Vehicle" and PED.IS_PED_ON_FOOT(self.get_ped())
+              or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh())) then
               widgetSound("Error")
-              gui.show_error("YimActions", "This animation can only be played while sitting inside a vehicle.")
+              gui.show_error("YimActions", "This animation can only be played while sitting inside a vehicle (cars and trucks only).")
             else
               widgetSound("Select")
               local coords     = self.get_pos()
@@ -887,9 +938,10 @@ YimActions:add_imgui(function()
       if ImGui.Button(string.format("%s##recents", GENERIC_PLAY_BTN_)) then
         script.run_in_fiber(function(pr)
           if selected_recent.dict ~= nil then -- animation type
-            if str_contains(string.lower(selected_recent.name), "in-car") and PED.IS_PED_ON_FOOT(self.get_ped()) then
+            if selected_recent.cat == "In-Vehicle" and PED.IS_PED_ON_FOOT(self.get_ped())
+              or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh())) then
               widgetSound("Error")
-              gui.show_error("YimActions", "This animation can only be played while sitting inside a vehicle.")
+              gui.show_error("YimActions", "This animation can only be played while sitting inside a vehicle (cars and trucks only).")
             else
               widgetSound("Select")
               local coords     = self.get_pos()
@@ -1309,9 +1361,10 @@ script.register_looped("animation hotkey", function(script)
       if isKeyJustPressed(keybinds.play_anim.code) and not isBrowsingApps() then
         if not is_playing_anim then
           if info ~= nil then
-            if str_contains(string.lower(info.name), "in-car") and PED.IS_PED_ON_FOOT(self.get_ped()) then
+            if info.cat == "In-Vehicle" and PED.IS_PED_ON_FOOT(self.get_ped())
+              or not VEHICLE.IS_THIS_MODEL_A_CAR(ENTITY.GET_ENTITY_MODEL(self.get_veh())) then
               widgetSound("Error")
-              gui.show_error("Samurai's Scripts", "This animation can only be played while sitting inside a vehicle.")
+              gui.show_error("Samurai's Scripts", "This animation can only be played while sitting inside a vehicle (cars and trucks only).")
             else
               widgetSound("Select")
               local mycoords     = ENTITY.GET_ENTITY_COORDS(self.get_ped(), false)
@@ -1424,7 +1477,7 @@ script.register_looped("MISC", function(misc)
       misc:sleep(10)
     until is_playing_anim == false
     PED.SET_PED_CAN_SWITCH_WEAPON(self.get_ped(), true)
-    if str_contains(string.lower(curr_playing_anim.name), "in-car") then
+    if curr_playing_anim.cat == "In-Vehicle" then
       if PAD.IS_CONTROL_PRESSED(0, 75) or PAD.IS_DISABLED_CONTROL_PRESSED(0, 75) or PED.IS_PED_ON_FOOT(self.get_ped()) then
         cleanup(misc)
         is_playing_anim = false
@@ -1480,37 +1533,41 @@ end)
 
 script.register_looped("AIEV", function(aiev) -- Anim Interrupt Event
   if is_playing_anim then
-    if curr_playing_anim.autoOff then
+    if PED.IS_PED_SWIMMING(self.get_ped()) or PED.IS_PED_SWIMMING_UNDER_WATER(self.get_ped()) then
+      cleanup(aiev)
+      is_playing_anim = false
+    end
+    local isLooped = curr_playing_anim.flag & 1 > 0
+    local isFrozen = curr_playing_anim.flag & 2 > 0
+    if not isLooped and not isFrozen then
+      repeat
+        aiev:sleep(200)
+      until not ENTITY.IS_ENTITY_PLAYING_ANIM(self.get_ped(), curr_playing_anim.dict, curr_playing_anim.anim, 3)
       is_playing_anim = false
     end
     if not ENTITY.IS_ENTITY_DEAD(self.get_ped(), true) then
-      aiev:sleep(1000)
       if is_playing_anim and not ENTITY.IS_ENTITY_PLAYING_ANIM(self.get_ped(), curr_playing_anim.dict, curr_playing_anim.anim, 3)
-        and not isKeyJustPressed(stopButtonCode) then
-        if PED.IS_PED_RAGDOLL(self.get_ped()) then
-          repeat
-            aiev:sleep(500)
-          until not PED.IS_PED_RAGDOLL(self.get_ped())
-        end
+        and not isKeyJustPressed(keybinds.stop_anim.code) then
+        aiev:sleep(1000)
         if PED.IS_PED_FALLING(self.get_ped()) then
           repeat
-            aiev:sleep(500)
+            aiev:sleep(1000)
           until not PED.IS_PED_FALLING(self.get_ped())
+          aiev:sleep(1000)
+          onAnimInterrupt()
         end
-        aiev:sleep(100)
-        if not ENTITY.IS_ENTITY_DEAD(self.get_ped(), true) and not isKeyJustPressed(stopButtonCode) then
-          onAnimInterrupt(aiev)
+        if PED.IS_PED_RAGDOLL(self.get_ped()) then
+          repeat
+            aiev:sleep(1000)
+          until not PED.IS_PED_RAGDOLL(self.get_ped())
+          aiev:sleep(1000)
+          onAnimInterrupt()
         end
+        onAnimInterrupt()
       end
     else
+      cleanup(aiev)
       is_playing_anim = false
-      if plyrProps[1] ~= nil then
-        for _, p in ipairs(plyrProps) do
-          if ENTITY.DOES_ENTITY_EXIST(p) then
-            ENTITY.DELETE_ENTITY(p)
-          end
-        end
-      end
     end
   end
 

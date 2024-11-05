@@ -500,27 +500,6 @@ getPedVehicleSeat = function(ped)
   end
 end
 
-function updatefilteredAnims()
-  filteredAnims = {}
-  for _, anim in ipairs(animlist) do
-    if string.find(string.lower(anim.name), string.lower(searchQuery)) then
-      table.insert(filteredAnims, anim)
-    end
-  end
-  table.sort(animlist, function(a, b)
-    return a.name < b.name
-  end)
-end
-
-function displayFilteredAnims()
-  updatefilteredAnims()
-  animNames = {}
-  for _, anim in ipairs(filteredAnims) do
-    table.insert(animNames, anim.name)
-  end
-  anim_index, used = ImGui.ListBox("##animlistbox", anim_index, animNames, #filteredAnims)
-end
-
 function updatefilteredScenarios()
   filteredScenarios = {}
   for _, scene in ipairs(ped_scenarios) do
@@ -1321,17 +1300,14 @@ function playPhoneGestures(s)
   end
 end
 
----@param s script_util
-function onAnimInterrupt(s)
-  s:sleep(1000)
-  if is_playing_anim and not isKeyJustPressed(keybinds.stop_anim.code) then
-    while not STREAMING.HAS_ANIM_DICT_LOADED(curr_playing_anim.dict) do
-      STREAMING.REQUEST_ANIM_DICT(curr_playing_anim.dict)
-      coroutine.yield()
-    end
-    TASK.CLEAR_PED_TASKS_IMMEDIATELY(self.get_ped())
-    TASK.TASK_PLAY_ANIM(self.get_ped(), curr_playing_anim.dict, curr_playing_anim.anim, 4.0, -4.0, -1,
+function onAnimInterrupt()
+  if is_playing_anim and not ENTITY.IS_ENTITY_DEAD(self.get_ped(), true) and not isKeyJustPressed(keybinds.stop_anim.code)
+    and not ENTITY.IS_ENTITY_PLAYING_ANIM(self.get_ped(), curr_playing_anim.dict, curr_playing_anim.anim, 3) then
+    if requestAnimDict(curr_playing_anim.dict) then
+      TASK.CLEAR_PED_TASKS(self.get_ped())
+      TASK.TASK_PLAY_ANIM(self.get_ped(), curr_playing_anim.dict, curr_playing_anim.anim, 4.0, -4.0, -1,
       curr_playing_anim.flag, 1.0, false, false, false)
+    end
   end
 end
 
