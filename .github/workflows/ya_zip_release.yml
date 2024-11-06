@@ -49,23 +49,19 @@ jobs:
             console.error(`Error deleting tag: ${error.message}`);
           }
 
-  create_archive:
+  create_new_release:
     runs-on: ubuntu-latest
     needs: delete_release
     steps:
     - uses: actions/checkout@master
     - name: Create Zip Archive
+    - id: create_zip
       uses: thedoctor0/zip-release@0.7.6
       with:
         type: 'zip'
         filename: "YimActions.zip"
         exclusions: /.git* *.json *.md
 
-  upload_release:
-    runs-on: ubuntu-latest
-    needs: create_archive
-    steps:
-    - uses: actions/checkout@master
     - name: Upload New Release
       uses: ncipollo/release-action@v1.14.0
       with:
