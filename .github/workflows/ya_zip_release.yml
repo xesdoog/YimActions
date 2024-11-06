@@ -8,11 +8,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  delete_release:
+  Main:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
     - name: Delete Existing Release
+      id: delete_release
       uses: actions/github-script@v7
       with:
         script: |
@@ -49,23 +50,18 @@ jobs:
             console.error(`Error deleting tag: ${error.message}`);
           }
 
-  create_new_release:
-    runs-on: ubuntu-latest
-    needs: delete_release
-    steps:
-    - name: Create Zip Archive
-    - id: create_zip
-    - uses: thedoctor0/zip-release@0.7.6
+    - name: Create Archive
+      id: create_archive
+      uses: thedoctor0/zip-release@0.7.6
       with:
         type: 'zip'
         filename: "YimActions.zip"
         exclusions: /.git* *.json *.md
 
-    - name: Upload New Release
-    - id: upload_zip
-    - uses: ncipollo/release-action@v1.14.0
+    - name: Upload Release
+      id: upload_release
+      uses: ncipollo/release-action@v1.14.0
       with:
         artifacts: "YimActions.zip"
         name: YimActions
         tag: "final"
-
