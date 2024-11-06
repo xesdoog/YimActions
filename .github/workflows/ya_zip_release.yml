@@ -62,7 +62,6 @@ jobs:
         filename: "YimActions.zip"
         exclusions: /.git* *.json *.md
 
-    - uses: actions/checkout@master
     - name: Upload New Release
     - id: upload_zip
       uses: ncipollo/release-action@v1.14.0
@@ -70,4 +69,4 @@ jobs:
         artifacts: "YimActions.zip"
         name: YimActions
         tag: "final"
-        
+
